@@ -1,0 +1,12 @@
+Beta 1.0 (8/29/20):
+The first release of Superintelligent, containing basic game mechanics and an ending
+
+Beta 1.1 (9/27/20):
+	*More endgame technology
+	*More fleshed out story
+	*Added Earth, spreading mechanics
+	*Optimizations, preformance
+	*Updated UI components
+	*Faster loading times
+	*Additions to Nanobot tree
+	*More tech icons

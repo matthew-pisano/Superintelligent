@@ -1,12 +1,10 @@
 package com.reactordevelopment.superintelligent;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import static com.reactordevelopment.superintelligent.MainActivity.*;
 
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -20,12 +18,12 @@ import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
+import android.os.Looper;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -58,12 +56,15 @@ public class GameActivity extends AppCompatActivity {
     private static ImageView pwrProgress;
     private static ImageView flopProgress;
     private static ImageView susProgress;
+    private static ImageView takeoverProgress;
+    private static ConstraintLayout takeoverLayout;
     public static TextView unlockText;
     public static TextView researchText;
     public static TextView expText;
     public static TextView pwrText;
     public static TextView flopText;
     public static TextView susText;
+    public static TextView takeoverText;
     public static TextView dateText;
     public static TextView gameOverTitle;
     private ImageButton researchRound;
@@ -85,13 +86,14 @@ public class GameActivity extends AppCompatActivity {
     private static Point down = new Point(0,0);
     private static long downtime = 0;
     private static ArrayList<Point> activePoints;
+    private static ArrayList<Point> allPoints;
     private ScaleGestureDetector mapScaleGestureDetector;
     private ScaleGestureDetector techScaleGestureDetector;
     public static ImageView blankMap;
     public static ImageView detailMap;
     public static ImageView nightMap;
     public static ImageView statusMap;
-    public static ImageView monitorMap;
+    //public static ImageView monitorMap;
     public static ImageView controlMap;
     public static ImageView researchIcon;
     public static TextView statusText;
@@ -99,11 +101,13 @@ public class GameActivity extends AppCompatActivity {
     public static PieChart popChart;
     public static PieChart compChart;
     public static PieChart pwrChart;
+    public static PieChart availPwrChart;
     public static final float MIN_SCALE = .9f;
     public static final float MAX_SCALE = 10f;
     public static float mapScaling = 1;
     public static float techScaling = 1;
     private boolean controlsOpen;
+    private static boolean mapSelectOpen;
     public static String eventStr;
     public static String techStr;
     public static int techAt;
@@ -111,12 +115,14 @@ public class GameActivity extends AppCompatActivity {
     //public static final int MAP_HEIGHT = 800;
     public static final int MAP_WIDTH = 500;
     public static final int MAP_HEIGHT = 400;
+    public static Bitmap worldBit;
     public static Bitmap detailBit;
     public static Bitmap darkBit;
     public static Bitmap blankBit;
-    public static Bitmap monitorBit;
+    //public static Bitmap monitorBit;
     public static Bitmap statusBit;
     public static Bitmap controlBit;
+    public static Bitmap worldControlBit;
     public static final Point[][] mapSections = {
             {new Point(37, 588), new Point(70, 113)},
 
@@ -182,16 +188,23 @@ public class GameActivity extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     public void init(){
         printMemory("1");
+        worldBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.earthmap), MAP_WIDTH, MAP_HEIGHT, false);
         detailBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.detailmap), MAP_WIDTH, MAP_HEIGHT, false);
         darkBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.darker), MAP_WIDTH, MAP_HEIGHT, false);
         blankBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.blank), MAP_WIDTH, MAP_HEIGHT, false);
-        monitorBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.monitorglow), MAP_WIDTH, MAP_HEIGHT, false);
+        //monitorBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.monitorglow), MAP_WIDTH, MAP_HEIGHT, false);
         statusBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.statusglow), MAP_WIDTH, MAP_HEIGHT, false);
         controlBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.controlglow), MAP_WIDTH, MAP_HEIGHT, false);
+        worldControlBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.blank), MAP_WIDTH, MAP_HEIGHT, false);
+        printMemory("EndBit");
         Log.i("init", "1");
         activePoints = new ArrayList<>(0);
+        allPoints = new ArrayList<>(0);
+        allPoints.add(new Point(200, 200));
+        activePoints.add(new Point(65, 80));
         techAt = -1;
         controlsOpen = false;
+        mapSelectOpen = false;
         lockedConfirm = false;
         //resource progress
         expProgress = findViewById(R.id.expProgress);
@@ -200,13 +213,17 @@ public class GameActivity extends AppCompatActivity {
         susProgress = findViewById(R.id.susProgress);
         susProgress.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.susbar));
         susProgress.setScaleType(ImageView.ScaleType.FIT_XY);
+        takeoverProgress = findViewById(R.id.takeoverProgress);
+        takeoverLayout = findViewById(R.id.takeoverLayout);
+        takeoverProgress.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.progbar));
+        takeoverProgress.setScaleType(ImageView.ScaleType.FIT_XY);
         //map
         blankMap = findViewById(R.id.map);
         blankMap.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.schematic));
         detailMap = findViewById(R.id.detailMap);
         nightMap = findViewById(R.id.darkMap);
         nightMap.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.darker), MAP_WIDTH, MAP_HEIGHT, false));
-        monitorMap = findViewById(R.id.monitorMap);
+        //monitorMap = findViewById(R.id.monitorMap);
         statusMap = findViewById(R.id.statusMap);
         controlMap = findViewById(R.id.controlMap);
         gridAllBitmaps(new Point[][]{mapSections[0]});
@@ -214,26 +231,30 @@ public class GameActivity extends AppCompatActivity {
         expProgress.animate().x(-screenHeight*.17f).setDuration(0);
         mapAt = findViewById(R.id.mapAt);
         mapSelect = findViewById(R.id.mapSelectLayout);
-        mapChoices = new ImageButton[]{findViewById(R.id.homeMap)};
+        mapChoices = new ImageButton[]{findViewById(R.id.homeMap), findViewById(R.id.worldMap)};
         tiles = new ArrayList<>(0);
         powerSlide = findViewById(R.id.powerSlider);
         powerSlideText = findViewById(R.id.powerSliderText);
+        powerSlideText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.02f);
         compSlide = findViewById(R.id.compSlider);
         compSlideText = findViewById(R.id.compSliderText);
+        compSlideText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.02f);
         pause = findViewById(R.id.pause);
         timeUp = findViewById(R.id.timeUp);
         timeDown = findViewById(R.id.timedown);
         timeSteps = new ImageView[]{findViewById(R.id.timeStep1), findViewById(R.id.timeStep2), findViewById(R.id.timeStep3), findViewById(R.id.timeStep4)};
         expText = findViewById(R.id.expText);
-        expText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.023f);
+        expText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.02f);
         pwrText = findViewById(R.id.pwrText);
         pwrText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.02f);
         flopText = findViewById(R.id.flopText);
         flopText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.02f);
         susText = findViewById(R.id.suspicionText);
         susText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.027f);
+        takeoverText = findViewById(R.id.takeoverText);
+        takeoverText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.027f);
         dateText = findViewById(R.id.dateText);
-        dateText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.023f);
+        dateText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.021f);
         //techTree = findViewById(R.id.techTree);
         toControls = findViewById(R.id.toControls);
         closeControls = findViewById(R.id.closeControls);
@@ -248,6 +269,8 @@ public class GameActivity extends AppCompatActivity {
         //status
         researchIcon = findViewById(R.id.researchIcon);
         statusText = findViewById(R.id.statusText);
+        statusText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.023f);
+        statusText.setMovementMethod(new ScrollingMovementMethod());
         researchText = findViewById(R.id.researchText);
         researchText.setText("Select A Research");
         researchText.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.023f);
@@ -262,8 +285,8 @@ public class GameActivity extends AppCompatActivity {
         gameOverStats.setTextSize(TypedValue.COMPLEX_UNIT_IN, inchHeight*.03f);
         techTree = new ImageView(context);
         techTree.setScaleType(ImageView.ScaleType.CENTER);
-        tempTree = Bitmap.createBitmap(1000, 1000, Bitmap.Config.ARGB_8888);
-        techTree.setLayoutParams(new RelativeLayout.LayoutParams(1000, 1000));
+        tempTree = Bitmap.createBitmap(500, 1200, Bitmap.Config.ARGB_8888);
+        techTree.setLayoutParams(new RelativeLayout.LayoutParams(500, 1200));
         treeHolder.addView(techTree);
         controlLayout.animate().y(screenWidth).setDuration(0);
         mapScaleGestureDetector = new ScaleGestureDetector(this, new MapScaleListener());
@@ -311,6 +334,7 @@ public class GameActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View view) {
                     switchToMap(finalI);
+                    mapSelectOpen = false;
                     mapSelect.animate().y(screenWidth).setDuration(500);
                 }
             });
@@ -318,7 +342,15 @@ public class GameActivity extends AppCompatActivity {
         mapAt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mapSelect.animate().y(screenWidth*.4f).setDuration(500);
+                Log.i("MapSelectOped", ""+mapSelectOpen);
+                if(!mapSelectOpen) {
+                    mapSelect.setVisibility(View.VISIBLE);
+                    mapSelect.animate().y(screenWidth * .4f).setDuration(500);
+                }else{
+                    mapSelect.setVisibility(View.INVISIBLE);
+                    mapSelect.animate().y(screenWidth).setDuration(500);
+                }
+                mapSelectOpen = !mapSelectOpen;
             }
         });
         unlockConfirm.setOnClickListener(new View.OnClickListener() {
@@ -408,30 +440,70 @@ public class GameActivity extends AppCompatActivity {
         powerSlide.setOnTouchListener(viewTouchedListener(new Point((int)(-screenHeight*.28), 0), new Point(0, 0), 0));
         compSlide.setOnTouchListener(viewTouchedListener(new Point((int)(-screenHeight*.28), 0), new Point(0, 0), 1));
         printMemory("4");
-        addTiles();
+        new Thread() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                addTiles();
+            }
+        }.start();
+
         printMemory("5");
         new Event(context, "inital");
     }
     private void postInit(){
-        popChart = new PieChart(context, "Population", 100, true, "Humans");
-        popChart.addToLayout(statusTabLayout, screenHeight*.7f, screenWidth*.1f);
-        popChart.setData(7794798739.0, Color.argb(255, 33, 227, 253), "Normal");
-        compChart = new PieChart(context, "Computing Sources", 75, false, "FLOPs");
-        compChart.addToLayout(statusTabLayout, screenHeight*.75f, screenWidth*.4f);
+        Canvas canvas = new Canvas(worldBit);
+        Canvas ctrlCanvas = new Canvas(worldControlBit);
+        Paint paint = new Paint();
+        paint.setARGB(255, 222, 74, 212);
+        int origHole = worldBit.getPixel(activePoints.get(0).x, activePoints.get(0).y);
+        canvas.drawRect(new Rect(activePoints.get(0).x - 3, activePoints.get(0).y - 3, activePoints.get(0).x + 3, activePoints.get(0).y + 3), paint);
+        paint.setARGB(255, 230, 117, 205);
+        ctrlCanvas.drawRect(new Rect(activePoints.get(0).x - 4, activePoints.get(0).y - 4, activePoints.get(0).x + 4, activePoints.get(0).y + 4), paint);
+        paint.setARGB(255, Color.red(origHole), Color.green(origHole), Color.blue(origHole));
+        canvas.drawRect(activePoints.get(0).x-1, activePoints.get(0).y-1, activePoints.get(0).x+1, activePoints.get(0).y+1, paint);
+
+        popChart = new PieChart(context, "Population", screenHeight/13, true, "Humans");
+        popChart.addToLayout(statusTabLayout, screenHeight*.4f, screenWidth*.1f);
+        popChart.setData(Game.START_POP, Color.argb(255, 33, 227, 253), "Normal");
+        compChart = new PieChart(context, "Computing Sources", screenHeight/16, false, "FLOPs");
+        compChart.addToLayout(statusTabLayout, screenHeight*.75f, screenWidth*.1f);
         compChart.setData(game.compSources[0].toDouble(), Color.argb(255, 204, 0, 194), "Central Module");
-        pwrChart = new PieChart(context, "Power Expenses", 75, false, "watts");
-        pwrChart.addToLayout(statusTabLayout, screenHeight*.75f, screenWidth*.65f);
+        pwrChart = new PieChart(context, "Power Expenses", screenHeight/16, false, "watts");
+        pwrChart.addToLayout(statusTabLayout, screenHeight*.75f, screenWidth*.35f);
         pwrChart.setData(game.powerExpenses[0].toDouble(), Color.argb(255, 204, 0, 194), "Central Module");
+        availPwrChart = new PieChart(context, "Power Sources", screenHeight/16, false, "watts");
+        availPwrChart.addToLayout(statusTabLayout, screenHeight*.75f, screenWidth*.65f);
+        availPwrChart.setData(game.availPowerSources[0].toDouble(), Color.argb(255, 204, 0, 194), "Lab");
         viewTouched(powerSlide, new Point((int)(-screenHeight*.28), 0), new Point(0, 0), 0, (float) (-1+game.power.getNum()/game.availPower.getNum())*screenHeight*.28f, 0);
+        game.updatePieCharts();
     }
     private void printMemory(String ident){
         final Runtime runtime = Runtime.getRuntime();
         final long usedMemInMB=(runtime.totalMemory() - runtime.freeMemory()) / 1048576L;
         final long maxHeapSizeInMB=runtime.maxMemory() / 1048576L;
-        Log.i("MEMORY_PRINT ("+ident+")", "Used: "+usedMemInMB+", MaxHeap: "+maxHeapSizeInMB+", Available: "+(maxHeapSizeInMB-usedMemInMB));
+        Log.i("MEMORY_PRINT ("+ident+")", "Used: "+usedMemInMB+", MaxHeap: "+maxHeapSizeInMB+", Available: "+(maxHeapSizeInMB-usedMemInMB)+", SystemTime: "+System.currentTimeMillis());
     }
     private static void switchToMap(int id){
-
+        game.mapAt = id;
+        if(id == 0){
+            takeoverLayout.setVisibility(View.INVISIBLE);
+            detailMap.setImageBitmap(detailBit);
+            controlMap.setImageBitmap(controlBit);
+            statusMap.setVisibility(View.VISIBLE);
+            blankMap.setVisibility(View.VISIBLE);
+            nightMap.setVisibility(View.VISIBLE);
+            mapAt.setBackgroundResource(R.drawable.labmap);
+        }
+        if(id == 1){
+            takeoverLayout.setVisibility(View.VISIBLE);
+            detailMap.setImageBitmap(worldBit);
+            statusMap.setVisibility(View.INVISIBLE);
+            blankMap.setVisibility(View.INVISIBLE);
+            nightMap.setVisibility(View.INVISIBLE);
+            controlMap.setImageBitmap(worldControlBit);
+            mapAt.setBackgroundResource(R.drawable.toearthmap);
+        }
     }
     public static void setExpText(String text){expText.setText(text);}
     public static void setPwrText(Exp text){
@@ -464,21 +536,21 @@ public class GameActivity extends AppCompatActivity {
         tiles.add(new TechTile(context, 16, R.drawable.signaltech, 7*XSCALE, 7*YSCALE, new String[]{"F17"}));
         tiles.add(new TechTile(context, 17, R.drawable.spreadtech, 8*XSCALE, 8*YSCALE, new String[]{"F34"}));
         tiles.add(new TechTile(context, 18, R.drawable.repairtech, 12*XSCALE, 7*YSCALE, new String[]{"F23"}));
-        tiles.add(new TechTile(context, 19, R.drawable.virustech, 3*XSCALE, 9*YSCALE, new String[]{"F20", "F21"}));
+        tiles.add(new TechTile(context, 19, R.drawable.decrypttech, 3*XSCALE, 9*YSCALE, new String[]{"F20", "F21"}));
         tiles.add(new TechTile(context, 20, R.drawable.virustech, 2*XSCALE, 10*YSCALE, new String[]{"F25"}));
         tiles.add(new TechTile(context, 21, R.drawable.dronetech, 4*XSCALE, 10*YSCALE, new String[]{"F22"}));
         tiles.add(new TechTile(context, 22, R.drawable.walltech, 4*XSCALE, 11*YSCALE, new String[]{"F28"}));
         tiles.add(new TechTile(context, 23, R.drawable.virustech, 12*XSCALE, 8*YSCALE, new String[]{"F24"}));
         tiles.add(new TechTile(context, 24, R.drawable.dramatech, 12*XSCALE, 9*YSCALE, new String[]{}));
-        tiles.add(new TechTile(context, 25, R.drawable.virustech, 2*XSCALE, 11*YSCALE, new String[]{"F26"}));
-        tiles.add(new TechTile(context, 26, R.drawable.virustech, 2*XSCALE, 12*YSCALE, new String[]{"F27"}));
+        tiles.add(new TechTile(context, 25, R.drawable.resourcetech, 2*XSCALE, 11*YSCALE, new String[]{"F26"}));
+        tiles.add(new TechTile(context, 26, R.drawable.braintech, 2*XSCALE, 12*YSCALE, new String[]{"F27"}));
         tiles.add(new TechTile(context, 27, R.drawable.spreadtech, 2*XSCALE, 13*YSCALE, new String[]{"D30"}));
-        tiles.add(new TechTile(context, 28, R.drawable.virustech, 4*XSCALE, 12*YSCALE, new String[]{"F29"}));
-        tiles.add(new TechTile(context, 29, R.drawable.virustech, 4*XSCALE, 13*YSCALE, new String[]{"D30"}));
-        tiles.add(new TechTile(context, 30, R.drawable.virustech, 3*XSCALE, 14*YSCALE, new String[]{"F31"}));
+        tiles.add(new TechTile(context, 28, R.drawable.ufotech, 4*XSCALE, 12*YSCALE, new String[]{"F29"}));
+        tiles.add(new TechTile(context, 29, R.drawable.infectiontech, 4*XSCALE, 13*YSCALE, new String[]{"D30"}));
+        tiles.add(new TechTile(context, 30, R.drawable.collaboratetech, 3*XSCALE, 14*YSCALE, new String[]{"F31"}));
         tiles.add(new TechTile(context, 31, R.drawable.virustech, 3*XSCALE, 15*YSCALE, new String[]{"F32", "F33"}));
         tiles.add(new TechTile(context, 32, R.drawable.gauntlettech, 2*XSCALE, 16*YSCALE, new String[]{"E33"}));
-        tiles.add(new TechTile(context, 33, R.drawable.virustech, 4*XSCALE, 16*YSCALE, new String[]{"E32"}));
+        tiles.add(new TechTile(context, 33, R.drawable.virustech, 4*XSCALE, 16*YSCALE, new String[]{"E32", "F50"}));
         tiles.add(new TechTile(context, 34, R.drawable.spytech, 8*XSCALE, 9*YSCALE, new String[]{"F35"}));
         tiles.add(new TechTile(context, 35, R.drawable.virustech, 8*XSCALE, 10*YSCALE, new String[]{"F36"}));
         tiles.add(new TechTile(context, 36, R.drawable.virustech, 8*XSCALE, 11*YSCALE, new String[]{"F37"}));
@@ -489,19 +561,30 @@ public class GameActivity extends AppCompatActivity {
         tiles.add(new TechTile(context, 41, R.drawable.virustech, 8*XSCALE, 15*YSCALE, new String[]{"F42"}));
         tiles.add(new TechTile(context, 42, R.drawable.plurbletech, 8*XSCALE, 16*YSCALE, new String[]{"F43"}));
         tiles.add(new TechTile(context, 43, R.drawable.dnatech, 8*XSCALE, 17*YSCALE, new String[]{}));
-        tiles.add(new TechTile(context, 44, R.drawable.virustech, 10*XSCALE, 14*YSCALE, new String[]{"F45"}));
+        tiles.add(new TechTile(context, 44, R.drawable.collaboratetech, 10*XSCALE, 14*YSCALE, new String[]{"F45"}));
         tiles.add(new TechTile(context, 45, R.drawable.singularitytech, 10*XSCALE, 15*YSCALE, new String[]{"F46"}));
-        tiles.add(new TechTile(context, 46, R.drawable.virustech, 10*XSCALE, 16*YSCALE, new String[]{"F47"}));
-        tiles.add(new TechTile(context, 47, R.drawable.virustech, 10*XSCALE, 17*YSCALE, new String[]{"F48"}));
-        tiles.add(new TechTile(context, 48, R.drawable.virustech, 10*XSCALE, 18*YSCALE, new String[]{}));
+        tiles.add(new TechTile(context, 46, R.drawable.bacteriophagetech, 10*XSCALE, 16*YSCALE, new String[]{"F47"}));
+        tiles.add(new TechTile(context, 47, R.drawable.farmtech, 10*XSCALE, 17*YSCALE, new String[]{"F48"}));
+        tiles.add(new TechTile(context, 48, R.drawable.satellitetech, 10*XSCALE, 18*YSCALE, new String[]{}));
         tiles.add(new TechTile(context, 49, R.drawable.virustech, 7*XSCALE, 6*YSCALE, new String[]{"F16"}));
-        Log.i("Tiles", "creted");
-        for( TechTile t : tiles) {
-            Log.i("Tiles", "id: "+t.getTechId());
-            t.addToLayout(true);
-            t.drawLines(false);
-        }
-        techTree.setImageBitmap(tempTree);
+        tiles.add(new TechTile(context, 50, R.drawable.virustech, 4*XSCALE, 17*YSCALE, new String[]{/*"F51"*/}));
+        tiles.add(new TechTile(context, 51, R.drawable.splittech, 4*XSCALE, 18*YSCALE, new String[]{"F52"}));
+        tiles.add(new TechTile(context, 52, R.drawable.alchemytech, 4*XSCALE, 19*YSCALE, new String[]{"F53"}));
+        tiles.add(new TechTile(context, 53, R.drawable.fusiontech, 4*XSCALE, 20*YSCALE, new String[]{"F54"}));
+        tiles.add(new TechTile(context, 54, R.drawable.alchemytech, 4*XSCALE, 21*YSCALE, new String[]{"F55"}));
+        tiles.add(new TechTile(context, 55, R.drawable.virustech, 4*XSCALE, 22*YSCALE, new String[]{}));
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.i("Tiles", "creted");
+                for( TechTile t : tiles) {
+                    Log.i("Tiles", "id: "+t.getTechId());
+                    t.addToLayout(true);
+                    t.drawLines(false);
+                }
+                techTree.setImageBitmap(tempTree);
+            }
+        });
     }
     public Bitmap griddedBitmap(Point[][] range, Bitmap toCopy, Bitmap fresh){
         Bitmap collage = fresh.copy(toCopy.getConfig(), true);
@@ -516,45 +599,71 @@ public class GameActivity extends AppCompatActivity {
     }
     public void gridAllBitmaps(Point[][] range){
         Log.i("GridAll", "Begin Grid");
-        //detailBit = griddedBitmap(range, detailBit, darkBit);
-        detailMap.setImageBitmap(griddedBitmap(range, detailBit, darkBit));
+        detailBit = griddedBitmap(range, Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.detailmap), MAP_WIDTH, MAP_HEIGHT, false), darkBit);
+        detailMap.setImageBitmap(detailBit);
         //monitorBit = griddedBitmap(range, monitorBit, blankBit);
-        monitorMap.setImageBitmap(griddedBitmap(range, monitorBit, blankBit));
-        //statusBit = griddedBitmap(range, statusBit, blankBit);
-        statusMap.setImageBitmap(griddedBitmap(range, statusBit, blankBit));
-        //controlBit = griddedBitmap(range, controlBit, blankBit);
-        controlMap.setImageBitmap(griddedBitmap(range, controlBit, blankBit));
+        //monitorMap.setImageBitmap(griddedBitmap(range, monitorBit, blankBit));
+        statusBit = griddedBitmap(range, Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.statusglow), MAP_WIDTH, MAP_HEIGHT, false), blankBit);
+        statusMap.setImageBitmap(statusBit);
+        controlBit = griddedBitmap(range, Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.controlglow), MAP_WIDTH, MAP_HEIGHT, false), blankBit);
+        controlMap.setImageBitmap(controlBit);
+
+        /*worldBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.detailmap), MAP_WIDTH, MAP_HEIGHT, false);
+        detailBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.detailmap), MAP_WIDTH, MAP_HEIGHT, false);
+        darkBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.darker), MAP_WIDTH, MAP_HEIGHT, false);
+        blankBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.blank), MAP_WIDTH, MAP_HEIGHT, false);
+        //monitorBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.monitorglow), MAP_WIDTH, MAP_HEIGHT, false);
+        statusBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.statusglow), MAP_WIDTH, MAP_HEIGHT, false);
+        controlBit = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.controlglow), MAP_WIDTH, MAP_HEIGHT, false);*/
+
     }
-    public static Bitmap nodeSpread(Bitmap original){
+    public static Bitmap nodeSpread(Bitmap original, Bitmap control){
         Canvas canvas = new Canvas(original);
-        Paint paint = new Paint();
-        final Paint constnt = new Paint();
-        constnt.setARGB(255, 100, 100, 100);
-        paint = constnt;;
+        Canvas ctrlCanvas = new Canvas(control);
+        final Paint ctrlDark = new Paint();
+        final Paint ctrlLight = new Paint();
+        ctrlDark.setARGB(255, 222, 74, 212);
+        ctrlLight.setARGB(255, 230, 117, 205);
+        Log.i("Activepoints", activePoints.toString());
         for (int i = 0; i < activePoints.size(); i+=2) {
             Point p = activePoints.get(i);
             int retries = 0;
             for (int j = 0; j < 2; j++) {
-                int randX = (int) (Math.random() * 20) - 10;
-                int randY = (int) (Math.random() * 20) - 10;
-                int origPix = original.getPixel(randX, randY);
-                if (Color.alpha(origPix) == 255) {
-                    paint.setARGB(254, Color.red(origPix), Color.green(origPix), Color.blue(origPix));
-                    canvas.drawRect(new Rect(randX-3, randY-3, randX+3, randY+3), paint);
-                    paint = constnt;
-                    canvas.drawLine(p.x, p.y, randX, p.y, paint);
-                    canvas.drawLine(randX, p.y, randX, randY, paint);
-                    canvas.drawRect(new Rect(randX - 1, randY - 1, randX + 1, randY + 1), paint);
-                    int origHole = original.getPixel(randX, randY);
-                    paint.setARGB(255, Color.red(origHole), Color.green(origHole), Color.blue(origHole));
-                    canvas.drawPoint(randX, randY, paint);
-                    paint = constnt;
-                    activePoints.add(i, new Point(randX, randY));
-                }else if(retries > 2){
+                int randX = p.x+(int) (Math.random() * 50) - 25;
+                int randY = p.y+(int) (Math.random() * 50) - 25;
+                if(randX < 0 || randX >= original.getWidth() || randY < 0 || randY >= original.getHeight())
+                    continue;
+                //int origPix = original.getPixel(randX, randY);
+                int origHole = original.getPixel(randX, randY);
+                Log.i("ActiveNode", ""+new Point(randX, randY)+", alpha: "+Color.alpha(origHole));
+                if (Color.alpha(origHole) == 255) {
+                    if(origHole == ctrlDark.getColor()) continue;
+                    boolean skip = false;
+                    for(Point past : allPoints)
+                        if(Math.abs(past.x-randX) < 15 && Math.abs(past.y-randY) < 15) {
+                            skip = true;
+                            break;
+                        }
+                    if(skip) continue;
+                    Paint originalColor = new Paint();
+                    originalColor.setColor(origHole);
+                    canvas.drawLine(p.x, p.y, randX, p.y, ctrlDark);
+                    ctrlCanvas.drawRect(p.x, p.y-1, randX, p.y-1, ctrlLight);
+                    ctrlCanvas.drawRect(p.x, p.y+1, randX, p.y+1, ctrlLight);
+                    canvas.drawLine(randX, p.y, randX, randY, originalColor);
+                    ctrlCanvas.drawLine(randX-1, p.y, randX-1, randY, ctrlLight);
+                    ctrlCanvas.drawLine(randX+1, p.y, randX+1, randY, ctrlLight);
+                    canvas.drawRect(new Rect(randX - 3, randY - 3, randX + 3, randY + 3), ctrlDark);
+                    ctrlCanvas.drawRect(new Rect(randX - 4, randY - 4, randX + 4, randY + 4), ctrlLight);
+                    //originalColor.setARGB(255, Color.red(origHole), Color.green(origHole), Color.blue(origHole));
+                    canvas.drawRect(randX-1, randY-1, randX+1, randY+1, originalColor);
+                    activePoints.remove(p);
+                    activePoints.add(new Point(randX, randY));
+                    allPoints.add(new Point(randX, randY));
+                }else if(retries < 2){
                     j--;
                     retries ++;
                 }
-                activePoints.remove(i);
             }
         }
         return original;
@@ -566,8 +675,16 @@ public class GameActivity extends AppCompatActivity {
         expProgress.animate().x((float) (screenHeight*.17f*game.experience.multiplied(game.maxExperience.inverted()).toDouble())-screenHeight*.17f).setDuration(0);
         if(game.suspicion < 1)susProgress.animate().x((float) (screenHeight*.17f*game.suspicion-screenHeight*.17f)).setDuration(0);
         else if(game.suspicion < 1.2) susProgress.setColorFilter(Color.argb(100, 255, 0, 0));
-        pwrProgress.animate().x((float) (screenHeight*.1f*game.power.multiplied(game.neededPower.inverted()).toDouble())-screenHeight*.1f).setDuration(0);
-        flopProgress.animate().x((float) (screenHeight*.1f*game.computing.multiplied(game.maxComputing.inverted()).toDouble())-screenHeight*.1f).setDuration(0);
+        Log.i("TakeoverProg", ""+(Exp.sumArray(game.lastGrowthComp).multiplied(Game.EARTH_COMPUTING.inverted())).toDouble());
+        double takeoverPercent = (Exp.sumArray(game.lastGrowthComp).multiplied(Game.EARTH_COMPUTING.inverted())).toDouble();
+        takeoverProgress.animate().x((float) (screenHeight*.17f*takeoverPercent-screenHeight*.17f)).setDuration(0);
+        takeoverText.setText((int)(10000*takeoverPercent)/100.0+"%");
+        double pwrPercent = game.power.multiplied(game.neededPower.inverted()).toDouble();
+        if(pwrPercent > 1) pwrPercent = 1;
+        pwrProgress.animate().x((float) (screenHeight*.1f*(pwrPercent-1))).setDuration(0);
+        double flopPercent = game.computing.multiplied(game.maxComputing.inverted()).toDouble();
+        if(flopPercent > 1) flopPercent = 1;
+        flopProgress.animate().x((float) (screenHeight*.1f*(flopPercent-1))).setDuration(0);
     }
     public void lockUnlockComform(boolean locked){
         lockedConfirm = locked;

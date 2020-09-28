@@ -25,7 +25,7 @@ public class Exp {
         this.pow = pow;
         //Log.i("Expconstruct2", num+", "+pow);
     }
-
+    public Exp copy(){return new Exp(num, pow);}
     public double[] getValues(){
         return new double[]{num, pow};
     }
@@ -33,14 +33,14 @@ public class Exp {
     public double getNum(){ return num; }
 
     private Exp adder(Exp b, boolean change) {
-        //Log.i("ExpAdd", ""+new Exp(num, pow)+", "+b);
+        //Log.i("ExpAdd", ""+this+", "+b);
         int neg = (int) (b.getNum() / Math.abs(b.getNum()));
-        double numB = Math.abs(b.getNum()); //2
-        int powB = b.getPow();//7
-        double numS = num;//2
-        int powS = pow;//7
+        double numB = Math.abs(b.getNum());
+        int powB = b.getPow();
+        double numS = num;
+        int powS = pow;
         //Log.i("Adder1", num+", "+pow+", "+numB+", "+powB);
-        if(Math.abs(pow-powB) < 6) num += neg * numB * Math.pow(10, powB - pow);
+        if(Math.abs(pow-powB) < 10) num += neg * numB * Math.pow(10, powB - pow);
         else if(powB > pow && b.getNum() != 0){
             pow = powB;
             num = b.getNum();
@@ -56,7 +56,7 @@ public class Exp {
             num *= 10;
             pow -= 1;
         }
-        //Log.i("ExpAdd", ""+new Exp(num, pow));
+        //Log.i("Adder2.5", num+", "+pow+", "+numB+", "+powB+", "+this);
         if(!change){
             num = numS;
             pow = powS;
@@ -95,7 +95,7 @@ public class Exp {
     public Exp added(Exp b){ return adder(b, false); }
     public Exp multiply(Exp b){ return multiplier(b, true); }
     public Exp multiplied(Exp b){ return multiplier(b, false); }
-    public int compare(Exp b){
+    private int compare(Exp b){
         //Log.i("Compare", ""+this+", "+b+", pow lt:"+(b.getPow() > pow)+", pow gt:"+(b.getPow() < pow)+", num:"+Double.compare(num, b.getNum()));
        if(b.getPow() > pow) return b.getNum() > 0 ? -1 : 1;
        if(pow > b.getPow()) return num > 0 ? 1 : -1;
@@ -120,6 +120,7 @@ public class Exp {
     public boolean lessThan(Exp b){return compare(b) == -1;}
     public boolean equalTo(Exp b){return compare(b) == 0;}
 
+    @Override
     public String toString(){
         double workingNum = num;
         int workingPow = pow;
@@ -136,6 +137,12 @@ public class Exp {
     public double toDouble(){
         if(pow < 307) return num*Math.pow(10, pow);
         return -1;
+    }
+    public static Exp sumArray(Exp[] array){
+        Exp temp = new Exp(0, 0);
+        for(int i=0; i<array.length; i++)
+            temp.add(array[i]);
+        return temp;
     }
     private String toUnitString(boolean isIllion){
         double workingNum = num;

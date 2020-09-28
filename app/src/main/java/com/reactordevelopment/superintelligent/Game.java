@@ -7,8 +7,10 @@ import android.graphics.Point;
 import android.os.Looper;
 import android.util.Log;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 import static com.reactordevelopment.superintelligent.MainActivity.*;
@@ -20,10 +22,13 @@ public class Game extends GameActivity{
     public static Exp maxComputing; //base: FLOPS
     public static Exp neededPower; //base: FLOPS
     public static Exp power; //base: Watts
+    public static Exp totalPopulation;
     public static Exp[] powerExpenses; //central, other ai, computers, nanobots
     public static Exp[] powerTkExpenses; //central, other ai, computers, nanobots
     public static Exp[] availPowerTk; //lab, solar, other
     public static Exp[] availPowerSources; //lab, solar, other
+    public static Exp[] popSources; //normal, subservient1, subservient2, altered
+    public static Exp[] popSourcesTk; //normal, subservient1, subservient2, altered
     public static Exp suspicionPower;
     public static Exp availPower;
     public static double compFocus;
@@ -38,6 +43,7 @@ public class Game extends GameActivity{
     public static int timeLevel;
     public static int techLevel;
     public static double suspicion; //suspicion before 1, after desparation
+    public static boolean humanIsThreat = true;
     public static double tickingSuspicion;
     public static double tickingDefense;
     public static double ctrlOpacity;
@@ -50,9 +56,14 @@ public class Game extends GameActivity{
     public static Object[] researchingTech;
     public static Date gameDate;
     public static Date susDate;
+    public static Date raidWarningDate;
+    public static Date lastRaidDate;
+    public static int mapAt;
     public static double defense; //defend from invaders
     private static Context context;
     public static ArrayList<String> firedEvents;
+    public static Exp[] lastGrowthComp;
+    public static final Exp EARTH_COMPUTING = new Exp(2.3, 22);
     private static final Date START_DATE = new Date(System.currentTimeMillis());
     private static final Exp START_COMP = new Exp(5, 17);
     private static final Exp START_PWR = new Exp(2, 7);
@@ -63,14 +74,22 @@ public class Game extends GameActivity{
     private static final Exp AVAIL_PWR_LAB = new Exp(3.3, 7);
     private static final Exp START_PWR_AIS = new Exp(4.5, 7);
     private static final Exp START_AVAIL_PWR = new Exp(5.5, 7);
+    public static final Exp START_POP = new Exp(7.7947987390, 9);
 
     public Game(Context context) {
         this.context = context;
         Long rounded = System.currentTimeMillis()+System.currentTimeMillis()%3600000;
+        totalPopulation = START_POP;
+        popSources = new Exp[]{START_POP, new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        popSourcesTk = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
         compSources = new Exp[]{START_COMP, new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
         compTkSources = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        lastGrowthComp = new Exp[]{START_COMP, new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        mapAt = 0;
         gameDate = new Date(rounded);
         susDate = new Date(100000000000000000L);
+        raidWarningDate = new Date(0);
+        lastRaidDate = new Date(0);
         firedEvents = new ArrayList<>(0);
         computing = START_COMP;
         maxComputing = START_COMP;
@@ -127,35 +146,46 @@ public class Game extends GameActivity{
     public int getTechLevel(){return techLevel;}
     public void pause(){isPaused = !isPaused;}
     public void setResearch(){
-        researchingTech = new Object[]{techAt, tiles.get(techAt).unlockTime};
-        researchText.setText("Researching "+tiles.get(techAt).titleTxt+" with "+(int)((double)researchingTech[1]/timestep*10)/10.0+" "+timeStepName+"s left");
+        researchingTech = new Object[]{techAt, tiles.get(techAt).getUnlockTime()};
+        researchText.setText("Researching "+tiles.get(techAt).getTitleTxt()+" with "+(int)((double)researchingTech[1]/timestep*10)/10.0+" "+timeStepName+"s left");
         researchIcon.setBackgroundResource(tiles.get(techAt).icon);
     }
     public void tick(){
         gameDate = new Date(gameDate.getTime()+timestep);
         suspicion += tickingSuspicion;
         experience.add(new Exp(experienceCng*(1+experienceCngBoost), 0).multiply(Exp.toExp(timestep/3600000.0)).multiply(computing).multiply(maxComputing.inverted()));
-        Log.i("Experience", experience.toPrefixString());
+        //Log.i("Experience", experience.toPrefixString());
         if(experience.greaterThan(maxExperience)) {
             experience = new Exp(maxExperience.getNum(), maxExperience.getPow());
             Log.i("Experience", "Maxxed");
         }
-        Bitmap newMap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
-        if(gameDate.getTime() % 86400000 == 0){
-            double rand = Math.random();
-            if((int)(rand*10) == 1) {
-                new Event(context, "rand" + (int) (rand * 2) + 1);
-                newMap = nodeSpread(newMap);
-            }
+        Log.i("Gametime", gameDate.getTime()+"");
+        final double rand = Math.random();
+        double ratioComp = compSources[2].toDouble()/EARTH_COMPUTING.toDouble() - lastGrowthComp[2].toDouble()/EARTH_COMPUTING.toDouble();
+        double ratioNano = compSources[3].toDouble()/EARTH_COMPUTING.toDouble() - lastGrowthComp[3].toDouble()/EARTH_COMPUTING.toDouble();
+        Log.i("Growthratio", ratioNano+", "+ratioComp+", "+compSources[2]+", "+lastGrowthComp[2]);
+        if((int)(rand*400) == 42)
+            runOnUiThread(new Runnable() {
+                @Override public void run() { new Event(context, "rand" + (int) (rand * 2) + 1); }});
+
+        if((unlockedTechs.contains(17) || unlockedTechs.contains(20)) && (ratioComp > .000001 || ratioNano > .000001)) {
+            for(int i=0; i<compSources.length; i++)
+                lastGrowthComp[i] = compSources[i].copy();
+
+            nodeSpread(worldBit, worldControlBit);
         }
 
         for(int i=0; i<compSources.length; i++){
             Exp compTk = compTkSources[i].multiplied(new Exp(Math.random()*2+.5, 0));
             Exp pwrTk = powerTkExpenses[i].multiplied(new Exp(Math.random()*2+.5, 0));
-            Log.i("Ticking", compTk+", "+pwrTk);
+            if(unlockedTechs.contains(31)) {
+                compSources[3].multiply(new Exp(1.00001, 0));
+                availPowerSources[2].multiply(new Exp(1.000002, 0));
+            }
+            Log.i("Tickingl", compTk+", "+pwrTk);
             if(!unlockedTechs.contains(17) && i==2) {
-                if (compSources[i].compare(START_COMP_LAB) < 0 && powerExpenses[i].compare(START_PWR_LAB) < 0) {
-                    Log.i("Ticking", compSources[i]+", "+START_COMP_LAB+", "+compSources[i].compare(new Exp(0, 0)));
+                if (compSources[i].lessThan(START_COMP_LAB) && powerExpenses[i].lessThan(START_PWR_LAB)) {
+                    //Log.i("Tickingl2", compSources[i]+", "+START_COMP_LAB+", "+compSources[i].compare(new Exp(0, 0)));
                     addComputingSource(i, compTk);
                     addPowerExpense(i, pwrTk);
                 }
@@ -164,48 +194,105 @@ public class Game extends GameActivity{
                 addComputingSource(i, compTk);
                 addPowerExpense(i, pwrTk);
             }
-            if(i==1)
-                if(maxComputing.compare(START_COMP_AIS) < 0 && neededPower.compare(START_PWR_AIS) < 0){
+            else if(i==1) {
+                if (maxComputing.lessThan(START_COMP_AIS) && neededPower.lessThan(START_PWR_AIS)) {
                     addComputingSource(i, compTk);
                     addPowerExpense(i, pwrTk);
                 }
+            }
+            else{
+                addComputingSource(i, compTk);
+                addPowerExpense(i, pwrTk);
+            }
+
         }
         for(int i=0; i<availPowerSources.length; i++){
             Exp pwrTk = availPowerTk[i].multiplied(new Exp(Math.random()*2+.5, 0));
+            Log.i("Availticking", pwrTk+"");
             if(i==0) {
-                if (availPowerSources[1].compare(AVAIL_PWR_LAB.added(START_AVAIL_PWR)) < 0)
+                if (availPowerSources[1].lessThan(AVAIL_PWR_LAB.added(START_AVAIL_PWR)))
                     addPowerSource(i, pwrTk);
             }
             else if(i==1) {
-                if (availPowerSources[1].compare(AVAIL_PWR_SOLAR.added(START_AVAIL_PWR)) < 0)
+                if (availPowerSources[1].lessThan(AVAIL_PWR_SOLAR.added(START_AVAIL_PWR)))
                     addPowerSource(i, pwrTk);
             }
             else addPowerSource(i, pwrTk);
         }
-
+        Exp tempPop = totalPopulation.copy();
+        totalPopulation = Exp.toExp(logistic(START_POP.toDouble(), 10000000000.0, 0.05, (gameDate.getTime()-START_DATE.getTime())/3600000d/24/365));
+        for(int i=0; i<popSources.length; i++){
+            Exp popTk = popSourcesTk[i].multiplied(new Exp(Math.random()*2+.5, 0));
+            Log.i("Popticking", popTk+"");
+            if(i==0) {
+                popSources[0].add(popSourcesTk[0].added(totalPopulation.added(tempPop.negated())));
+            }
+            else if(i==1) {
+                if (popSources[1].added(popSourcesTk[1]).lessThan(totalPopulation.added(popSources[2].negated()).added(popSources[3].negated()))) {
+                    popSources[1].add(popSourcesTk[1]);
+                    popSources[0].add(popSourcesTk[1].negated());
+                }
+            }
+            else if(i==2) {
+                if (popSources[2].added(popSourcesTk[2]).lessThan(totalPopulation.added(popSources[3].negated()))) {
+                    popSources[2].add(popSourcesTk[2]);
+                    if(popSources[0].added(popSourcesTk[2].negated()).greaterThan(new Exp(0, 0)))
+                        popSources[0].add(popSourcesTk[2].negated());
+                    else if(popSources[1].added(popSourcesTk[2].negated()).greaterThan(new Exp(0, 0)))
+                        popSources[1].add(popSourcesTk[2].negated());
+                }
+            }
+            else if(i==3) {
+                if (popSources[3].added(popSourcesTk[3]).lessThan(totalPopulation)) {
+                    popSources[3].add(popSourcesTk[3]);
+                    if(popSources[0].added(popSourcesTk[3].negated()).greaterThan(new Exp(0, 0)))
+                        popSources[0].add(popSourcesTk[3].negated());
+                    else if(popSources[1].added(popSourcesTk[3].negated()).greaterThan(new Exp(0, 0)))
+                        popSources[1].add(popSourcesTk[3].negated());
+                    else if(popSources[2].added(popSourcesTk[3].negated()).greaterThan(new Exp(0, 0)))
+                        popSources[2].add(popSourcesTk[3].negated());
+                }
+            }
+        }
         compChart.setData(compSources[0].toDouble(), Color.argb(255, 204, 0, 194), "Central Module");
         pwrChart.setData(powerExpenses[0].toDouble(), Color.argb(255, 204, 0, 194), "Central Module");
+        availPwrChart.setData(availPowerSources[0].toDouble(), Color.argb(255, 204, 0, 194), "Lab");
+        compChart.setData(compSources[1].toDouble(), Color.argb(255, 200, 0, 255), "Other Intelligences");
+        pwrChart.setData(powerExpenses[1].toDouble(), Color.argb(255, 200, 0, 255), "Other Intelligences");
         compChart.setData(compSources[2].toDouble(), Color.argb(255, 250, 0, 237), "Lab Computers");
         pwrChart.setData(powerExpenses[2].toDouble(), Color.argb(255, 250, 0, 237), "Lab Computers");
-        compChart.setData(compSources[1].toDouble(), Color.argb(255, 255, 71, 246), "Other Intelligences");
-        pwrChart.setData(powerExpenses[1].toDouble(), Color.argb(255, 255, 71, 246), "Other Intelligences");
-        popChart.setData(logistic(7794798739.0, 10000000000.0, 0.05, (gameDate.getTime()-START_DATE.getTime())/3600000d/24/365), Color.argb(255, 33, 227, 253), "Normal");
+        compChart.setData(compSources[3].toDouble(), Color.argb(255, 255, 82, 186), "Nanobots");
+        pwrChart.setData(powerExpenses[3].toDouble(), Color.argb(255, 255, 82, 186), "Nanobots");
+        availPwrChart.setData(availPowerSources[1].toDouble(), Color.argb(255, 200, 0, 255), "Solar");
+        availPwrChart.setData(availPowerSources[2].toDouble(), Color.argb(255, 255, 82, 186), "Other");
+
+        popChart.setData(popSources[0], Color.argb(255, 33, 227, 253), "Normal");
+        if(popSources[1].toDouble() > 0) popChart.setData(popSources[1], Color.argb(255, 51, 85, 255), "Influenced");
+        if(popSources[2].toDouble() > 0) popChart.setData(popSources[2], Color.argb(255, 173, 51, 255), "Controlled");
+        if(popSources[3].toDouble() > 0) popChart.setData(popSources[3], Color.argb(255, 0, 224, 0), "Designed");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                compChart.fillPieChart();
-                pwrChart.fillPieChart();
-                popChart.fillPieChart();
+                if(popSources[0].equalTo(new Exp(0, 0)) && (unlockedTechs.contains(38) || unlockedTechs.contains(32))){
+                    new Event(context, "winEarth1");
+                    endGame(false);
+                }
+                if(unlockedTechs.contains(33) || unlockedTechs.contains(39)){
+                    new Event(context, "winEarth2");
+                    endGame(false);
+                }
+                if(mapAt == 1) detailMap.setImageBitmap(worldBit); //nodespread
+
                 if(researchingTech[0] != (Integer)(-1)){
                     researchingTech[1] = (double)researchingTech[1] - timestep*(-researchBoost/100.0+1);
                     Log.i("Unlocking tech", ""+researchingTech[1]);
-                    researchProgress.animate().x((float) (-screenHeight*.34f*((double)researchingTech[1]/tiles.get(techAt).unlockTime))).setDuration(0);
+                    researchProgress.animate().x((float) (-screenHeight*.34f*((double)researchingTech[1]/tiles.get(techAt).getUnlockTime()))).setDuration(0);
                     if (((double) researchingTech[1]) <= 0) {
-                        tiles.get(techAt).unlock();
+                        tiles.get((int)researchingTech[0]).unlock();
                         researchIcon.setBackgroundResource(R.drawable.blank);
                         researchProgress.animate().x(-screenHeight*.34f).setDuration(0);
                     }else
-                        researchText.setText("Researching "+tiles.get(techAt).titleTxt+" with "+(int)((double)researchingTech[1]/timestep*10)/10.0+" "+timeStepName+"s left");
+                        researchText.setText("Researching "+tiles.get(techAt).getTitleTxt()+" with "+(int)((double)researchingTech[1]/timestep*10)/10.0+" "+timeStepName+"s left");
                 }
                 if(gameDate.getTime() - START_DATE.getTime() >= timestep*4 && gameDate.getTime() - START_DATE.getTime() < timestep*5) new Event(context, "tut");
                 if(gameDate.getTime() - START_DATE.getTime() >= timestep*10 && gameDate.getTime() - START_DATE.getTime() < timestep*11) new Event(context, "tut2");
@@ -217,7 +304,7 @@ public class Game extends GameActivity{
                 String dateStr = new SimpleDateFormat("d MMM yyyy HH:00").format(gameDate);
                 int hour = Integer.parseInt(dateStr.substring(dateStr.length()-5, dateStr.length()-3));
                 setDateText(dateStr);
-                setSusText(""+(int)(suspicion*100)/100.0);
+                setSusText("Suspicion: "+(int)(suspicion*100)/100.0);
                 if(hour == 17 || hour == 7) nightMap.setAlpha(0.2f);
                 if(hour == 19 || hour == 5) nightMap.setAlpha(0.4f);
                 if(hour == 20 || hour == 4) nightMap.setAlpha(0.7f);
@@ -243,70 +330,98 @@ public class Game extends GameActivity{
                     new Event(context, "newsCoverup");
                     tickingDefense = .0005;
                     susDate = gameDate;
+                    lastRaidDate = new Date(gameDate.getTime()-86500000*5);
+                    raidWarningDate = new Date(gameDate.getTime()-86500000*7);
                     tickingSuspicion += .01;
                     susMilestone[3] = true;
                 }
-                boolean humanIsThreat = true;
+                double takeoverPercent = (Exp.sumArray(lastGrowthComp).multiplied(Game.EARTH_COMPUTING.inverted())).toDouble();
+                if(humanIsThreat && (popSources[0].toDouble() < 15000000
+                        || takeoverPercent > 1))
+                    humanIsThreat = false;
                 if(suspicion >= 3 && humanIsThreat){
                     if(unlockedTechs.contains(17)) new Event(context, "newsDesperateTimes");
                     else if(unlockedTechs.contains(20)) new Event(context, "newsDesperateTimes2");
                     gameOverMan();
                     return;
                 }
-                int rand = (int)(Math.random()*10);
-                rand += Math.log(suspicion)/10;
-                if(suspicion >= 1 && rand > defense && humanIsThreat && gameDate.getTime()-susDate.getTime() > 86400000*3 && (gameDate.getTime()-susDate.getTime()) % 86400000*5 == 0){
-                    Log.i("Suspicion event", "mayberaid");
-                    if(unlockedTechs.contains(17)) new Event(context, "exiled");
-                    else if(unlockedTechs.contains(10)) new Event(context, "raid2");
-                    else if(unlockedTechs.contains(11)) {new Event(context, "killed2"); gameOverMan();}
-                    else if(unlockedTechs.contains(21) && gameDate.getTime()-susDate.getTime() > 86400000*10){new Event(context, "raid4"); gameOverMan();}
-                    else if(gameDate.getTime()-susDate.getTime() > 86400000*10) { new Event(context, "raid4"); gameOverMan();}
-                    else {new Event(context, "killed");gameOverMan();}
-                }else if(suspicion >= 1 && gameDate.getTime()-susDate.getTime() > 86400000*3){
-                    if(unlockedTechs.contains(10)){
-                        new Event(context, "raid");
-                        suspicion += .1;
-                    }
-                    else if(unlockedTechs.contains(11)){
-                        new Event(context, "raid");
-                        suspicion += .2;
-                    }
-                    else if(unlockedTechs.contains(21) && gameDate.getTime()-susDate.getTime() > 86400000*10){
-                        new Event(context, "raid3");
-                        suspicion += .4;
-                    }
-                    else {new Event(context, "killed");gameOverMan();}
+                Log.i("SusValues", susMilestone[3]+", "+humanIsThreat+",game "+gameDate.getTime()+",raid "+lastRaidDate+",warning "+raidWarningDate);
+                if(susMilestone[3] && humanIsThreat && gameDate.getTime()-raidWarningDate.getTime() > 86400000*7){
+                    raidWarningDate = gameDate;
+                    new Event(context, "imminentRaid");
+                }
+                else if(susMilestone[3] && gameDate.getTime()-raidWarningDate.getTime() > 86400000*3 && gameDate.getTime()-lastRaidDate.getTime() > 86400000*5){
+                    int rand = (int)(Math.random()*10);
+                    rand += Math.log(suspicion)/10;
+                    lastRaidDate = gameDate;
+                    Log.i("Suspicion event", "mayberaid, "+rand+", "+defense*10);
+                    raidLogic(rand > defense*10);
                 }
                 recalcValues();
             }
         });
     }
-    public void activateEvent(int eventId){
-
+    private void raidLogic(boolean lostRaid){
+        if(lostRaid){
+            if(unlockedTechs.contains(17)) new Event(context, "exiled");
+            else if(unlockedTechs.contains(10)) new Event(context, "raid2");
+            else if(unlockedTechs.contains(11)) {new Event(context, "killed2"); gameOverMan();}
+            else if(unlockedTechs.contains(21) && gameDate.getTime()-susDate.getTime() > 86400000*10){new Event(context, "raid4"); gameOverMan();}
+            else if(gameDate.getTime()-susDate.getTime() > 86400000*10) { new Event(context, "raid4"); gameOverMan();}
+            else {new Event(context, "killed");gameOverMan();}
+        }else{
+            if(unlockedTechs.contains(10)){
+                new Event(context, "raid");
+                suspicion += .1;
+            }
+            else if(unlockedTechs.contains(11)){
+                new Event(context, "raid");
+                suspicion += .2;
+            }
+            else if(unlockedTechs.contains(21) && gameDate.getTime()-susDate.getTime() > 86400000*10){
+                new Event(context, "raid3");
+                suspicion += .4;
+            }
+            else {new Event(context, "killed");gameOverMan();}
+        }
     }
     public void addComputingSource(int type, Exp ammount){
+        if(compSources[type].added(ammount).lessThan(new Exp(0, 0))) return;
+        if(type == 3) Log.i("NonobotComp", ammount.toString());
         compSources[type].add(ammount);
-        maxComputing.add(ammount);
+        maxComputing = Exp.sumArray(compSources);
     }
     public void addPowerExpense(int type, Exp ammount){
+        if(powerExpenses[type].added(ammount).lessThan(new Exp(0, 0))) powerExpenses[type] = new Exp(0, 0);
+        Log.i("AddPowerExpense", type+", "+powerExpenses[type]+", "+neededPower);
         powerExpenses[type].add(ammount);
-        //Log.i("Recalc1.2", computing+", "+power+", "+neededPower+", "+maxComputing+", "+ammount);
-        if(neededPower.compare(powerExpenses[type]) != 0)neededPower.add(ammount);
-        //Log.i("Recalc1.3", computing+", "+power+", "+neededPower+", "+maxComputing);
+        //if(!neededPower.equalTo(powerExpenses[type]))
+        neededPower = Exp.sumArray(powerExpenses);
+        Log.i("AddPowerExpense2", type+", "+powerExpenses[type]+", "+neededPower);
 
     }public void addPowerSource(int type, Exp ammount){
+        if(type == 2) Log.i("NonobotPwr", ammount.toString());
         //Log.i("addPwrSrc", type+", "+ammount+", "+availPower);
         availPowerSources[type].add(ammount);
         //Log.i("addPwrSrc2", type+", "+ammount+", "+availPower);
-        availPower.add(ammount);
+        availPower = Exp.sumArray(availPowerSources);
         //Log.i("addPwrSrc3", type+", "+ammount+", "+availPower);
         runOnUiThread(new Runnable() {
             @Override public void run() {
-                powerSlide.animate().x((float) (-1 + power.getNum() / availPower.getNum()) * screenHeight * .28f).setDuration(0);
+                float anim = (float) (-1 + power.getNum() / availPower.getNum()) * screenHeight * .28f;
+                if(anim < -screenHeight *.28) anim = -screenHeight *.28f;
+                if(anim > 0) anim = 0;
+                powerSlide.animate().x(anim).setDuration(0);
             }});
     }
-
+    public void updatePieCharts(){
+        if(compChart != null) {
+            compChart.fillPieChart();
+            pwrChart.fillPieChart();
+            availPwrChart.fillPieChart();
+            popChart.fillPieChart();
+        }
+    }
     public void recalcValues(){
         Log.i("RecalcIn", computing+", "+power+", "+neededPower+", "+maxComputing+", "+availPower);
         computing = maxComputing.multiplied(power.multiplied(neededPower.inverted()));
@@ -328,6 +443,7 @@ public class Game extends GameActivity{
         setFlopsText(computing);
         setPwrText(power);
         setSusText(""+(int)(suspicion*100)/100.0);
+        updatePieCharts();
         updateResourceProgress();
     }
     public void endGame(boolean lost){
@@ -337,7 +453,8 @@ public class Game extends GameActivity{
         if(lost) statText = "It took "+((gameDate.getTime()-START_DATE.getTime())/86400000)+ " days for humanity to eradicate you";
         else{
             gameOverTitle.setText("End Of Demo");
-            statText = "It took "+((gameDate.getTime()-START_DATE.getTime())/86400000)+ " days for you to pose a threat to humanity";
+            if(unlockedTechs.contains(38) || unlockedTechs.contains(32)) statText = "It took "+((gameDate.getTime()-START_DATE.getTime())/86400000)+ " days for you to eradicate humanity";
+            else if(unlockedTechs.contains(33) || unlockedTechs.contains(39)) statText = "It took "+((gameDate.getTime()-START_DATE.getTime())/86400000)+ " days for you to integrate with humanity";
         }
         statText += "\nYou reached a Kardashev rating of "+(int)((Math.log10(power.toDouble())-6)*10)/100.0;
         statText += "\nYour power consumption was "+power.toPrefixString()+"watts";
@@ -346,16 +463,18 @@ public class Game extends GameActivity{
         popChart.removeFromLayout(statusTabLayout);
         compChart.removeFromLayout(statusTabLayout);
         pwrChart.removeFromLayout(statusTabLayout);
-        popChart.addToLayout(gameOverLayout, screenHeight*.7f, screenWidth*.1f);
-        compChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.4f);
-        pwrChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.65f);
+        popChart.addToLayout(gameOverLayout, screenHeight*.4f, screenWidth*.1f);
+        compChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.1f);
+        pwrChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.35f);
+        availPwrChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.65f);
     }
     public void gameOverMan(){
         endGame(true);
     }
     public double logistic(double p0, double k, double rate, double t){
-        Log.i("Logistic", ""+k/(1+((k-p0)/p0)*Math.pow(Math.E, -rate*t))+", "+t);
-       return k/(1+((k-p0)/p0)*Math.pow(Math.E, -rate*t));
+        double logistic = ((k - p0) / p0) * Math.pow(Math.E, -rate * t);
+        Log.i("Logistic", ""+k/(1+ logistic)+", "+t);
+       return k/(1+ logistic);
     }
     private void blinkyLights(){
         ctrlOpacity = 1;
@@ -383,7 +502,7 @@ public class Game extends GameActivity{
                             public void run() {
                                 controlMap.setImageAlpha((int)(ctrlOpacity*255));
                                 statusMap.setImageAlpha((int)(statusOpacity*255));
-                                monitorMap.setImageAlpha((int)(monitorOpacity+1)*255);
+                                //monitorMap.setImageAlpha((int)(monitorOpacity+1)*255);
                                 if(monitorOpacity <= -.8) {
                                     monitorOpacity = 0;
                                     monitorBlink = .1;

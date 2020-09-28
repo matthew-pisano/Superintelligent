@@ -1,14 +1,22 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('C:\\Users\\agent\\OneDrive\\Documents\\pgrm\\keystore2.jks')
+            storePassword 'Science.616005'
+            keyAlias 'Science.616005'
+            keyPassword 'Science.616005'
+        }
+    }
     compileSdkVersion 29
 
     defaultConfig {
         applicationId "com.reactordevelopment.superintelligent"
         minSdkVersion 16
         targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

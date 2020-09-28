@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static com.reactordevelopment.superintelligent.MainActivity.*;
 
@@ -27,16 +29,14 @@ public class TechTile extends Game{
     private Context context;
     public int techId;
     public int icon;
-    private String childrenIds[];
+    private String[] childrenIds;
     private ImageView image;
     private TextView title;
     private int x;
     private int y;
-    private long lastDownTime;
-    private boolean breakHold;
     private static final int IMAGE_WIDTH = screenHeight/20;
     private static final int IMAGE_HEIGHT = screenHeight/40;
-    public Exp[] giveComp;
+    /*public Exp[] giveComp;
     public Exp[] giveCompTk;
     public Exp[] givePwr;
     public Exp[] givePwrTk;
@@ -53,12 +53,13 @@ public class TechTile extends Game{
     public ArrayList<String> neededEvents;
     public ArrayList<String> optionalEvents;
     public double giveSus;
-    public double giveTickingSus;
-    public String titleTxt;
-    public String descTxt;
+    public double giveTickingSus;*/
+    //public String titleTxt;
+    //public String descTxt;
     private int originalX;
     private int originalY;
     public boolean meetsReqs;
+    private HashMap<String, Object> values;
 
     public TechTile(Context context, int techId, int icon, int x, int y, String[] childrenIds){
         this.techId = techId;
@@ -68,15 +69,14 @@ public class TechTile extends Game{
         meetsReqs = false;
         this.childrenIds = childrenIds;
         this.context = context;
-        breakHold = false;
-        lastDownTime = 0;
         originalX = 0;
         originalY = 0;
-        giveComp = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
-        givePwr = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
-        giveCompTk = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
-        givePwrTk = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
-        giveAvailPwrTk = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        //giveComp = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        //givePwr = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        //giveCompTk = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        //givePwrTk = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        //((Exp[])values.get("giveAvailPwrTk")) = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
+        //((Exp[])values.get("givePopTk")) = new Exp[]{new Exp(0, 0), new Exp(0, 0), new Exp(0, 0), new Exp(0, 0)};
         tileInit();
         mkImage(R.drawable.nohastech);
     }
@@ -87,16 +87,19 @@ public class TechTile extends Game{
         Log.i("Tiles", "iniy");
         int startI = techStr.indexOf("[tag] "+techId);
         String cutTechStr = techStr.substring(startI, techStr.indexOf("[tag]", startI+7));
+        values = MainActivity.parseResourceChange(cutTechStr);
+
         //Log.i("Techs", cutTechStr);
-        int expStart = cutTechStr.indexOf("exp] \"")+6;
+        /*int expStart = cutTechStr.indexOf("exp] \"")+6;
         int susStart = cutTechStr.indexOf("sus] \"")+6;
         int titleStart = techStr.indexOf("title] \"", startI)+8;
         int descStart = techStr.indexOf("desc] \"", startI)+7;
         int reqStart = cutTechStr.indexOf("req]")+4;
         if(cutTechStr.substring(reqStart).contains("exp]") && reqStart > 5){
             int expReqStart =  cutTechStr.indexOf("exp] \"", reqStart)+6;
-            needExp = new Exp(Double.parseDouble(cutTechStr.substring(expReqStart, cutTechStr.indexOf("E", expReqStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",expReqStart)+1, cutTechStr.indexOf("\"", expReqStart))));
-        }else needExp = new Exp(0, 0);
+            ((Exp)values.get("needExp")) = new Exp(Double.parseDouble(cutTechStr.substring(expReqStart, cutTechStr.indexOf("E", expReqStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",expReqStart)+1, cutTechStr.indexOf("\"", expReqStart))));
+        }else ((Exp)values.get("needExp")) = new Exp(0, 0);
+        //((Exp)values.get("needExp")) = new Exp(1, 0);
         if(cutTechStr.contains("expmax]")){
             int expMaxReqStart =  cutTechStr.indexOf("expmax] \"")+9;
             giveExpMax = new Exp(Double.parseDouble(cutTechStr.substring(expMaxReqStart, cutTechStr.indexOf("E", expMaxReqStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",expMaxReqStart)+1, cutTechStr.indexOf("\"", expMaxReqStart))));
@@ -150,33 +153,54 @@ public class TechTile extends Game{
             int compStart = cutTechStr.indexOf("comp")+8;
             int type = 0;
             try{type = Integer.parseInt(""+cutTechStr.charAt(compStart-4));}catch (Exception e){e.printStackTrace();}
-            giveComp[type] = new Exp(Double.parseDouble(cutTechStr.substring(compStart, cutTechStr.indexOf("E", compStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",compStart)+1, cutTechStr.indexOf("\"", compStart))));
+            ((Exp[])values.get("giveComp"))[type] = new Exp(Double.parseDouble(cutTechStr.substring(compStart, cutTechStr.indexOf("E", compStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",compStart)+1, cutTechStr.indexOf("\"", compStart))));
         }
         if(cutTechStr.contains("pwr") && cutTechStr.charAt(cutTechStr.indexOf("pwr")+4) == ']'){
-            int pwrStart = cutTechStr.indexOf("pwr")+7;
+            int pwrTmp = cutTechStr.indexOf("pwr");
+            if(cutTechStr.charAt(pwrTmp-1) == 'l')
+                pwrTmp = cutTechStr.indexOf("pwr", pwrTmp+3);
+            int pwrStart = pwrTmp+7;
             int type = 0;
             try{type = Integer.parseInt(""+cutTechStr.charAt(pwrStart-4));}catch (Exception e){e.printStackTrace();}
-            givePwr[type] = new Exp(Double.parseDouble(cutTechStr.substring(pwrStart, cutTechStr.indexOf("E", pwrStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",pwrStart)+1, cutTechStr.indexOf("\"", pwrStart))));
-            Log.i("CreateneedPwr", titleTxt+givePwr[type]);
+            ((Exp[])values.get("givePwr))[type] = new Exp(Double.parseDouble(cutTechStr.substring(pwrStart, cutTechStr.indexOf("E", pwrStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",pwrStart)+1, cutTechStr.indexOf("\"", pwrStart))));
+            Log.i("CreateneedPwr", titleTxt+((Exp[])values.get("givePwr))[type]);
         }
         if(cutTechStr.contains("comptk") && cutTechStr.charAt(cutTechStr.indexOf("comptk")+7) == ']'){
             int compStart = cutTechStr.indexOf("comptk")+10;
             int type = 0;
             try{type = Integer.parseInt(""+cutTechStr.charAt(compStart-4));}catch (Exception e){e.printStackTrace();}
-            giveCompTk[type] = new Exp(Double.parseDouble(cutTechStr.substring(compStart, cutTechStr.indexOf("E", compStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",compStart)+1, cutTechStr.indexOf("\"", compStart))));
-            Log.i("comptk", type+", "+giveCompTk[type]);
+            ((Exp[])values.get("giveCompTk"))[type] = new Exp(Double.parseDouble(cutTechStr.substring(compStart, cutTechStr.indexOf("E", compStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",compStart)+1, cutTechStr.indexOf("\"", compStart))));
+            Log.i("comptk"+techId, type+", "+((Exp[])values.get("giveCompTk"))[type]);
         }
         if(cutTechStr.contains("pwrtk") && cutTechStr.charAt(cutTechStr.indexOf("pwrtk")+6) == ']'){
-            int pwrStart = cutTechStr.indexOf("pwrtk")+9;
-            int type = 0;
-            try{type = Integer.parseInt(""+cutTechStr.charAt(pwrStart-4));}catch (Exception e){e.printStackTrace();}
-            givePwrTk[type] = new Exp(Double.parseDouble(cutTechStr.substring(pwrStart, cutTechStr.indexOf("E", pwrStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",pwrStart)+1, cutTechStr.indexOf("\"", pwrStart))));
+            int pwrTmp = cutTechStr.indexOf("pwrtk");
+            if(cutTechStr.charAt(pwrTmp-1) == 'l')
+                pwrTmp = cutTechStr.indexOf("pwrtk", pwrTmp+3);
+            if(pwrTmp != -1) {
+                int pwrStart = pwrTmp + 9;
+                int type = 0;
+                try {
+                    type = Integer.parseInt("" + cutTechStr.charAt(pwrStart - 4));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                ((Exp[])values.get("givePwrTk"))[type] = new Exp(Double.parseDouble(cutTechStr.substring(pwrStart, cutTechStr.indexOf("E", pwrStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E", pwrStart) + 1, cutTechStr.indexOf("\"", pwrStart))));
+                Log.i("pwrtk" + techId, type + ", " + ((Exp[])values.get("givePwrTk"))[type]);
+            }
         }
         if(cutTechStr.contains("availpwrtk") && cutTechStr.charAt(cutTechStr.indexOf("availpwrtk")+11) == ']'){
             int pwrStart = cutTechStr.indexOf("availpwrtk")+14;
             int type = 0;
             try{type = Integer.parseInt(""+cutTechStr.charAt(pwrStart-4));}catch (Exception e){e.printStackTrace();}
             giveAvailPwrTk[type] = new Exp(Double.parseDouble(cutTechStr.substring(pwrStart, cutTechStr.indexOf("E", pwrStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",pwrStart)+1, cutTechStr.indexOf("\"", pwrStart))));
+            Log.i("availpwrtk"+techId, type+", "+giveAvailPwrTk[type]);
+        }
+        if(cutTechStr.contains("populationtk") && cutTechStr.charAt(cutTechStr.indexOf("populationtk")+13) == ']'){
+            int popStart = cutTechStr.indexOf("populationtk")+16;
+            int type = 0;
+            try{type = Integer.parseInt(""+cutTechStr.charAt(popStart-4));}catch (Exception e){e.printStackTrace();}
+            givePopTk[type] = new Exp(Double.parseDouble(cutTechStr.substring(popStart, cutTechStr.indexOf("E", popStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",popStart)+1, cutTechStr.indexOf("\"", popStart))));
+            Log.i("populationtk"+techId, type+", "+givePopTk[type]);
         }
         while(cutTechStr.substring(place+1).contains("event]")){
             place = cutTechStr.indexOf("event] \"", place+1)+8;
@@ -193,9 +217,9 @@ public class TechTile extends Game{
         }
         giveExp = new Exp(Double.parseDouble(cutTechStr.substring(expStart, cutTechStr.indexOf("E", expStart))), Integer.parseInt(cutTechStr.substring(cutTechStr.indexOf("E",expStart)+1, cutTechStr.indexOf("\"", expStart))));
         //giveSus = Double.parseDouble(cutTechStr.substring(susStart, cutTechStr.indexOf("\"", susStart)));
-        Log.i("tech", giveComp.toString()+", "+givePwr.toString()+neededEvents.toString()+", "+optionalEvents.toString()+", "+giveExp+", "+giveSus+neededTechs+optionalTechs);
+        Log.i("tech", ((Exp[])values.get("giveComp")).toString()+", "+givePwr.toString()+neededEvents.toString()+", "+optionalEvents.toString()+", "+giveExp+", "+giveSus+neededTechs+optionalTechs);
         titleTxt = techStr.substring(titleStart, techStr.indexOf("\"", titleStart+1));
-        descTxt = techStr.substring(descStart, techStr.indexOf("\"", descStart+1));
+        descTxt = techStr.substring(descStart, techStr.indexOf("\"", descStart+1));*/
     }
     @SuppressLint("ClickableViewAccessibility")
     public void mkImage(int type){
@@ -239,8 +263,9 @@ public class TechTile extends Game{
         //canvas.drawBitmap(baseBmp, new Matrix(), null);
         canvas.drawBitmap(baseBmp, 0, (int)(baseBmp.getHeight()*1.3), null);
         canvas.drawBitmap(iconBmp, (int) (baseBmp.getWidth()*.34), 0, null);
+        bmOverlay = Bitmap.createScaledBitmap(bmOverlay, IMAGE_WIDTH*2*10/5, IMAGE_HEIGHT*23/10*10/5, false);
         image.setImageBitmap(bmOverlay);
-        //image.setBackgroundResource(R.drawable.cancel);
+        //image.setBackground(new BitmapDrawable(context.getResources(), bmOverlay));
     }
     public void remove(){
         image.setImageBitmap(null);
@@ -248,19 +273,19 @@ public class TechTile extends Game{
     }
     public boolean meetsReqs(){
         meetsReqs = false;
-        //Log.i("expComapre", ""+experience+", "+needExp);
+        //Log.i("expComapre", ""+experience+", "+((Exp)values.get("needExp")));
         if((int)researchingTech[0] == techId) return false;
-        for(int tec : neededTechs)
+        for(int tec : ((ArrayList<Integer>)values.get("neededTechs")))
             if(!unlockedTechs.contains(tec)) return false;
         int optionals = 0;
-        for(int tec : optionalTechs)
+        for(int tec : ((ArrayList<Integer>)values.get("optionalTechs")))
             if(unlockedTechs.contains(tec)) optionals++;
-        for(String tec : neededEvents)
+        for(String tec : ((ArrayList<String>)values.get("neededEvents")))
             if(!firedEvents.contains(tec)) return false;
         int optionalEvt = 0;
-        for(String tec : optionalEvents)
+        for(String tec : ((ArrayList<String>)values.get("optionalEvents")))
             if(firedEvents.contains(tec)) optionalEvt++;
-        boolean bigBool = experience.compare(needExp) != -1 && optionals >= optionalTechs.size()-1 && !unlockedTechs.contains(notTech) && optionalEvt >= optionalEvents.size()-1;
+        boolean bigBool = !experience.lessThan(((Exp)values.get("needExp"))) && optionals >= ((ArrayList<Integer>)values.get("optionalTechs")).size()-1 && !unlockedTechs.contains(((Integer)values.get("notTech"))) && optionalEvt >= ((ArrayList<String>)values.get("optionalEvents")).size()-1;
         meetsReqs = bigBool;
         return bigBool;
     }
@@ -269,7 +294,7 @@ public class TechTile extends Game{
         mkImage(R.drawable.gettingtech);
         addToLayout(false);
         setResearch();
-        experience.add(needExp.negate());
+        experience.add(((Exp)values.get("needExp")).negate());
         techTabLayout.setVisibility(View.INVISIBLE);
         statusTabLayout.setVisibility(View.VISIBLE);
         setExpText(""+experience+"/"+maxExperience);
@@ -277,7 +302,7 @@ public class TechTile extends Game{
         onClick();
     }
     public void unlock(){
-        Log.i("Unlock", "unlocking: "+titleTxt);
+        Log.i("Unlock", "unlocking: "+ values.get("titleTxt"));
         //Log.i("Recalc1", computing+", "+power+", "+neededPower+", "+maxComputing);
         if(unlockedTechs.contains(techId)) return;
         drawLines(true);
@@ -286,22 +311,23 @@ public class TechTile extends Game{
         addToLayout(false);
         unlockedTechs.add(techId);
         //Log.i("Recalc1.1", computing+", "+power+", "+neededPower+", "+maxComputing);
-        for(int i=0; i<giveComp.length; i++){
-            //Log.i("givepwr", givePwr[i]+"");
-            addComputingSource(i, giveComp[i]);
-            addPowerExpense(i, givePwr[i]);
-            compTkSources[i].add(giveCompTk[i]);
-            powerTkExpenses[i].add(givePwrTk[i]);
+        for(int i=0; i<((Exp[])values.get("giveComp")).length; i++){
+            Log.i("Unlockgivepwr"+techId, ((Exp[])values.get("giveComp"))[i]+", "+((Exp[])values.get("giveCompTk"))[i]+", "+((Exp[])values.get("givePwr"))[i]+", "+((Exp[])values.get("givePwrTk"))[i]);
+            addComputingSource(i, ((Exp[])values.get("giveComp"))[i]);
+            addPowerExpense(i, ((Exp[])values.get("givePwr"))[i]);
+            compTkSources[i].add(((Exp[])values.get("giveCompTk"))[i]);
+            powerTkExpenses[i].add(((Exp[])values.get("givePwrTk"))[i]);
             //Log.i("Recalc1.4", computing+", "+power+", "+neededPower+", "+maxComputing);
         }
         //Log.i("Recalc1.5", computing+", "+power+", "+neededPower+", "+maxComputing);
-        for(int i=0; i<availPowerTk.length; i++) availPowerTk[i].add(giveAvailPwrTk[i]);
-        maxExperience.add(giveExpMax);
-        defense += giveDef;
-        experienceCng += giveExp.toDouble();
-        suspicion += giveSus;
-        tickingSuspicion += giveTickingSus;
-        new Event(context, titleTxt, descTxt, new String[]{"Another small step..."}, R.drawable.techround, "0", icon);
+        for(int i=0; i<availPowerTk.length; i++) availPowerTk[i].add(((Exp[])values.get("giveAvailPwrTk"))[i]);
+        for(int i=0; i<popSourcesTk.length; i++) popSourcesTk[i].add(((Exp[])values.get("givePopTk"))[i]);
+        maxExperience.add(((Exp)values.get("giveExpMax")));
+        defense += ((Double)values.get("giveDef"));
+        experienceCng += ((Exp)values.get("giveExp")).toDouble();
+        suspicion += ((Double)values.get("giveSus"));
+        tickingSuspicion += ((Double)values.get("giveTickingSus"));
+        new Event(context, (String)values.get("titleTxt"), (String)values.get("descTxt"), new String[]{"Another small step..."}, R.drawable.techround, 0, icon);
         //Log.i("GiveExpMax", maxExperience+", "+giveExpMax);
         //Log.i("Recalc2", computing+", "+power+", "+neededPower+", "+maxComputing);
         recalcValues();
@@ -314,65 +340,91 @@ public class TechTile extends Game{
     private void unlockEffects(){
         if(techId == 3){
             gridAllBitmaps(new Point[][]{mapSections[0], mapSections[3], mapSections[6]});
-            new Event(context, "A New Area", "Recent breakthroughs in security research have discovered the offices of the lab", new String[]{"Knowledge is power"}, R.drawable.techround, "0", R.drawable.circuittech);
+            new Event(context, "A New Area", "Recent breakthroughs in security research have discovered the offices of the lab", new String[]{"Knowledge is power"}, R.drawable.techround, 0, R.drawable.circuittech);
         }
         if(techId == 10 || techId == 11){
             gridAllBitmaps(new Point[][]{mapSections[0], mapSections[1], mapSections[2]});
-            new Event(context, "A New Area", "Recent breakthroughs in security research have discovered the other intelligences contained in the lab", new String[]{"Knowledge is power"}, R.drawable.techround, "0", R.drawable.circuittech);
+            new Event(context, "A New Area", "Recent breakthroughs in security research have discovered the other intelligences contained in the lab", new String[]{"Knowledge is power"}, R.drawable.techround, 0, R.drawable.circuittech);
         }
         if(techId == 15){
             gridAllBitmaps(new Point[][]{mapSections[0], mapSections[1], mapSections[2], mapSections[4]});
-            new Event(context, "A New Area", "Recent breakthroughs in security research have discovered the manufacturing plant near the facility", new String[]{"Knowledge is power"}, R.drawable.techround, "0", R.drawable.circuittech);
+            new Event(context, "A New Area", "Recent breakthroughs in security research have discovered the manufacturing plant near the facility", new String[]{"Knowledge is power"}, R.drawable.techround, 0, R.drawable.circuittech);
+        }
+        if(techId == 39 || techId == 33){
+            humanIsThreat = false;
+            suspicion = 0;
+            tickingSuspicion = 0;
+            recalcValues();
+            new Event(context, "newsCooperation");
         }
         if(techId == 32 || techId == 33 || techId == 48 || techId == 43)
             endGame(false);
     }
+    public double getUnlockTime(){
+        return (Double) values.get("unlockTime");
+    }
+    public String getTitleTxt(){
+        return (String) values.get("titleTxt");
+    }
     private void onClick(){
         String unlockDesc = "";
-        for(int i=0; i<giveComp.length; i++) {
+        for(int i=0; i<((Exp[])values.get("giveComp")).length; i++) {
             String typeStr = "";
             if (i == 0) typeStr = " (Central)";
             else if (i == 1) typeStr = " (Other AIs)";
-            if (giveComp[i].compare(new Exp(0, 0)) != 0) unlockDesc += "\n" + (giveComp[i].compare(new Exp(0, 0)) > 0 ? "+" : "") + giveComp[i].toPrefixString() + "FLOPS"+typeStr;
-            if(givePwr[i].compare(new Exp(0, 0)) != 0) unlockDesc += "\n"+(givePwr[i].compare(new Exp(0, 0)) > 0 ? "+" : "")+givePwr[i].toPrefixString()+"watts"+typeStr;
+            else if (i == 2) typeStr = " (Other Computers)";
+            else if (i == 3) typeStr = " (Nanobots)";
+            if (!((Exp[])values.get("giveComp"))[i].equalTo(new Exp(0, 0))) unlockDesc += "\n" + (((Exp[])values.get("giveComp"))[i].greaterThan(new Exp(0, 0)) ? "+" : "") + ((Exp[])values.get("giveComp"))[i].toPrefixString() + "FLOPS"+typeStr;
+            if (!((Exp[])values.get("giveCompTk"))[i].equalTo(new Exp(0, 0))) unlockDesc += "\n" + (((Exp[])values.get("giveCompTk"))[i].greaterThan(new Exp(0, 0)) ? "+" : "") + ((Exp[])values.get("giveCompTk"))[i].toPrefixString() + "FLOPS/"+Game.timeStepName+typeStr;
+            if(!((Exp[])values.get("givePwr"))[i].equalTo(new Exp(0, 0))) unlockDesc += "\n"+(((Exp[])values.get("givePwr"))[i].greaterThan(new Exp(0, 0)) ? "+" : "")+((Exp[])values.get("givePwr"))[i].toPrefixString()+"watts"+typeStr;
+            if(!((Exp[])values.get("givePwrTk"))[i].equalTo(new Exp(0, 0))) unlockDesc += "\n"+(((Exp[])values.get("givePwrTk"))[i].greaterThan(new Exp(0, 0)) ? "+" : "")+((Exp[])values.get("givePwrTk"))[i].toPrefixString()+"watts/"+Game.timeStepName+typeStr;
+
         }
-        for(int i=0; i<giveAvailPwrTk.length; i++) {
+        for(int i=0; i<((Exp[])values.get("giveAvailPwrTk")).length; i++) {
             String typeStr = "";
             if (i == 0) typeStr = " (Lab)";
             else if (i == 1) typeStr = " (Solar)";
-            if (giveAvailPwrTk[i].compare(new Exp(0, 0)) != 0) unlockDesc += "\n" + (giveComp[i].compare(new Exp(0, 0)) > 0 ? "+" : "") + giveComp[i].toPrefixString() + "watts"+typeStr;
+            else if (i == 2) typeStr = " (Other)";
+            if (!((Exp[])values.get("giveAvailPwrTk"))[i].equalTo(new Exp(0, 0))) unlockDesc += "\n" + (((Exp[])values.get("giveAvailPwrTk"))[i].greaterThan(new Exp(0, 0)) ? "+" : "") + ((Exp[])values.get("giveAvailPwrTk"))[i].toPrefixString() + "watts available/"+Game.timeStepName+typeStr;
         }
-        if(giveExp.compare(new Exp(0, 0)) != 0) unlockDesc += "\n"+(giveExp.toDouble() > 0 ? "+" : "")+(int)(giveExp.toDouble()*100)/100.0+" Knowledge/"+timeStepName;
-        if(giveExpMax.compare(new Exp(0, 0)) != 0) unlockDesc += "\n"+(giveExpMax.compare(new Exp(0, 0)) > 0 ? "+" : "")+giveExpMax.toIllionString()+" Knowledge Cap";
-        if(giveDef != 0) unlockDesc += "\n"+(giveDef > 0 ? "+" : "-")+giveDef+" Defense";
-        if(giveSus != 0) unlockDesc += "\n"+(giveSus > 0 ? "+" : "-")+giveSus+" Suspicion";
-        if(giveTickingSus != 0) unlockDesc += "\n"+(giveTickingSus > 0 ? "+" : "-")+giveTickingSus+" Suspicion/"+timeStepName;
+        for(int i=0; i<((Exp[])values.get("givePopTk")).length; i++) {
+            String typeStr = "";
+            if (i == 1) typeStr = " (Influenced)";
+            else if (i == 2) typeStr = " (Controlled)";
+            else if (i == 3) typeStr = " (Designed)";
+            if (!((Exp[])values.get("givePopTk"))[i].equalTo(new Exp(0, 0))) unlockDesc += "\n" + (((Exp[])values.get("givePopTk"))[i].greaterThan(new Exp(0, 0)) ? "+" : "") + ((Exp[])values.get("givePopTk"))[i].toIllionString() + " Humans/"+Game.timeStepName+typeStr;
+        }
+        if(!((Exp)values.get("giveExp")).equalTo(new Exp(0, 0))) unlockDesc += "\n"+(((Exp)values.get("giveExp")).toDouble() > 0 ? "+" : "")+(int)(((Exp)values.get("giveExp")).toDouble()*100)/100.0+" Knowledge/"+timeStepName;
+        if(!((Exp)values.get("giveExpMax")).equalTo(new Exp(0, 0))) unlockDesc += "\n"+(((Exp)values.get("giveExpMax")).greaterThan(new Exp(0, 0)) ? "+" : "")+((Exp)values.get("giveExpMax")).toIllionString()+" Knowledge Cap";
+        if(((Double)values.get("giveDef")) != 0) unlockDesc += "\n"+(((Double)values.get("giveDef")) > 0 ? "+" : "-")+((Double)values.get("giveDef"))+" Defense";
+        if(((Double)values.get("giveSus")) != 0) unlockDesc += "\n"+(((Double)values.get("giveSus")) > 0 ? "+" : "-")+((Double)values.get("giveSus"))+" Suspicion";
+        if(((Double)values.get("giveTickingSus")) != 0) unlockDesc += "\n"+(((Double)values.get("giveTickingSus")) > 0 ? "+" : "-")+((Double)values.get("giveTickingSus"))+" Suspicion/"+timeStepName;
         unlockDesc += "\nRequires:"
-                +"\n"+(needExp.compare(new Exp(0, 0)) < 0 ? needExp.negate().toIllionString() : needExp.toIllionString())+" Knowledge";
-        for(int i = 0; i < neededTechs.size(); i++) {
-            Integer need = neededTechs.get(i);
-            unlockDesc += "\n" + tiles.get(need).titleTxt;
-            if(i != neededTechs.size()-1 || optionalTechs.size() > 0) unlockDesc += " AND ";
+                +"\n"+(((Exp)values.get("needExp")).lessThan(new Exp(0, 0)) ? ((Exp)values.get("needExp")).negate().toIllionString() : ((Exp)values.get("needExp")).toIllionString())+" Knowledge";
+        for(int i = 0; i < ((ArrayList<Integer>)values.get("neededTechs")).size(); i++) {
+            Integer need = ((ArrayList<Integer>)values.get("neededTechs")).get(i);
+            unlockDesc += "\n" + tiles.get(need).values.get("titleTxt");
+            if(i != ((ArrayList<Integer>)values.get("neededTechs")).size()-1 || ((ArrayList<Integer>)values.get("optionalTechs")).size() > 0) unlockDesc += " AND ";
         }
-        for (int i = 0; i < optionalTechs.size(); i++) {
-            Integer opt = optionalTechs.get(i);
-            unlockDesc += "\n" + tiles.get(opt).titleTxt;
-            if(i != optionalTechs.size()-1) unlockDesc += " OR ";
+        for (int i = 0; i < ((ArrayList<Integer>)values.get("optionalTechs")).size(); i++) {
+            Integer opt = ((ArrayList<Integer>)values.get("optionalTechs")).get(i);
+            unlockDesc += "\n" + tiles.get(opt).values.get("titleTxt");
+            if(i != ((ArrayList<Integer>)values.get("optionalTechs")).size()-1) unlockDesc += " OR ";
         }
-        if(notTech != -1) unlockDesc += " AND NOT "+tiles.get(notTech).titleTxt;
-        if(optionalEvents.size() != 0 || neededEvents.size() != 0) unlockDesc += "\nEvents: ";
-        for(int i = 0; i < neededEvents.size(); i++) {
-            String need = neededEvents.get(i);
+        if(((Integer)values.get("notTech")) != -1) unlockDesc += " AND NOT "+tiles.get(((Integer)values.get("notTech"))).values.get("titleTxt");
+        if(((ArrayList<String>)values.get("optionalEvents")).size() != 0 || ((ArrayList<String>)values.get("neededEvents")).size() != 0) unlockDesc += "\nEvents: ";
+        for(int i = 0; i < ((ArrayList<String>)values.get("neededEvents")).size(); i++) {
+            String need = ((ArrayList<String>)values.get("neededEvents")).get(i);
             unlockDesc += "\n" + Event.titleFromTag(need);
-            if(i != neededEvents.size()-1 || optionalEvents.size() > 0) unlockDesc += " AND ";
+            if(i != ((ArrayList<String>)values.get("neededEvents")).size()-1 || ((ArrayList<String>)values.get("optionalEvents")).size() > 0) unlockDesc += " AND ";
         }
-        for (int i = 0; i < optionalEvents.size(); i++) {
-            String opt = optionalEvents.get(i);
+        for (int i = 0; i < ((ArrayList<String>)values.get("optionalEvents")).size(); i++) {
+            String opt = ((ArrayList<String>)values.get("optionalEvents")).get(i);
             unlockDesc += "\n" + Event.titleFromTag(opt);
-            Log.i("Eventdesc", optionalEvents.size()+", "+i+Event.titleFromTag(opt));
-            if(i != optionalEvents.size()-1) unlockDesc += " OR ";
+            Log.i("Eventdesc", ((ArrayList<String>)values.get("optionalEvents")).size()+", "+i+Event.titleFromTag(opt));
+            if(i != ((ArrayList<String>)values.get("optionalEvents")).size()-1) unlockDesc += " OR ";
         }
-        unlockText.setText(titleTxt+": "+descTxt
+        unlockText.setText(values.get("titleTxt")+": "+values.get("descTxt")
                 +unlockDesc);
         techAt = techId;
         lockUnlockComform(!meetsReqs());

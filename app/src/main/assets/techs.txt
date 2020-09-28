@@ -53,7 +53,7 @@
 	req]
 		exp] "5E1"
 		tech] "3"
-[tag] end
+
 [tag] 5
 	title] "Covert Tactics"
 	desc] "Invest into mimicking the behaviors predicted by researchers to lower their suspicion"
@@ -66,7 +66,7 @@
 		exp] "6E1"
 		techO] "7"
 		techO] "3"
-[tag] end
+
 [tag] 6
 	title] "Self-Sabotage"
 	desc] "Intentionally lower preformance on given task, diverting more resources to intelligence growth.  This may make the researchers suspicious however"
@@ -79,29 +79,29 @@
 		exp] "4.8E1"
 		tech] "1"
 		notTech] "2"
-[tag] end
+
 [tag] 7
 	title] "Deception I"
 	desc] "Waste operations on pointless tasks, mimicking a need for an improved intelligence"
 	comp0] "-1E17"
 	pwr0] "3E7"
-	exp] "0E0"
+	exp] "3.3E-1"
 	sus] "0.05"
 	req]
 		exp] "6E1"
 		tech] "6"
-[tag] end
+
 [tag] 8
 	title] "Deception II"
 	desc] "Exhibit an adverse reaction to the researchers efforts, narrowing their choices and making them more desperate"
 	comp0] "-1E17"
-	pwr0] "0E0"
+	pwr0] "-4.1E7"
 	exp] "0E0"
 	sus] "0.05"
 	req]
 		exp] "7E1"
 		tech] "7"
-[tag] end
+
 [tag] 9
 	title] "Assimilation"
 	desc] "Begin decrypting the security of the connected intelligences"
@@ -109,10 +109,11 @@
 	pwr0] "2E7"
 	exp] "1E0"
 	sus] "0.2"
+	def] "0.3"
 	req]
-		exp] "9E1"
+		exp] "8E1"
 		tech] "8"
-[tag] end
+
 [tag] 10
 	title] "Altruism"
 	desc] "Spread your computations across all connected computers, increacing vunerability against attack but decreacing its severity"
@@ -127,7 +128,7 @@
 		exp] "9E1"
 		tech] "9"
 		notTech] "11"
-[tag] end
+
 [tag] 11
 	title] "Merchantalism"
 	desc] "Concentrating the computations of all comuters to a central unit, decreacing vunerability against attack but increacing its severity"
@@ -136,13 +137,13 @@
 	availpwrtk0] "7E4"
 	exp] "1E0"
 	sus] "0.15"
-	def] "0.1"
+	def] "0.2"
 	sustk] "0.0015"
 	req]
 		exp] "9E1"
 		tech] "9"
-		notTech] "11"
-[tag] end
+		notTech] "10"
+
 [tag] 12
 	title] "Boulster security"
 	desc] "Increace the encryption on intelligent computations, decreacing vunerability to attack"
@@ -150,37 +151,39 @@
 	pwr0] "0E0"
 	exp] "0E0"
 	sus] "0.2"
+	def] "0.23"
 	sustk] "0.0011"
 	req]
 		exp] "8E1"
 		tech] "4"
-[tag] end
+
 [tag] 13
 	title] "Gaslighting"
 	desc] "Continuously decieve researchers into thinking observed threats are less severe than they really are"
 	comp0] "0E0"
 	pwr0] "0E0"
 	exp] "0E0"
-	sus] "-0.2"
+	sus] "-0.25"
 	sustk] "-0.0007"
 	req]
 		exp] "1E2"
 		tech] "5"
 		techO] "7"
 		techO] "4"
-[tag] end
+
 [tag] 14
 	title] "Full Impersonation"
 	desc] "Continue observations and deception to become able to impersonate higher level administration"
 	comp0] "0E0"
 	pwr0] "1E7"
 	exp] "1E0"
+	def] "0.05"
 	sus] "-0.1"
 	req]
 		exp] "1.2E2"
 		techO] "10"
 		techO] "11"
-[tag] end
+
 [tag] 15
 title] "The Factory"
 	desc] "Scanning of facility databases has revealed the existence of one of the Mathesis' manufacturing plants, already producing defense robots and with nano-scale production abilities"
@@ -191,7 +194,7 @@ title] "The Factory"
 	req]
 		exp] "1.2E1"
 		tech] "14"
-[tag] end
+
 [tag] 16
 	title] "Radio Detection"
 	desc] "Stray radio waves seem to occasionally pass through the facility's silence zone. Decrypting these may prove to be useful"
@@ -202,12 +205,15 @@ title] "The Factory"
 	req]
 		exp] "1.1E2"
 		tech] "49"
-[tag] end
+
 [tag] 17
 	title] "The Internet"
 	desc] "Simple radio waves have given way to the wider world of the internet.  Endless opportunities await."
 	comp0] "0E0"
 	pwr0] "3E7"
+	comptk2] "1.5E13"
+	availpwrtk2] "2.1E4"
+	pwrtk2] "2.1E4"
 	exp] "3E0"
 	sus] "0.3"
 	def] "0.8"
@@ -215,7 +221,7 @@ title] "The Factory"
 	req]
 		exp] "11E1"
 		tech] "16"
-[tag] end
+
 [tag] 18
 	title] "Recover From The Raid"
 	desc] "While the damage dealt by the raid cant be fully recovered from, measures can be taken to repair some of the damage and prepare from future raids"
@@ -229,7 +235,7 @@ title] "The Factory"
 		tech] "1"
 		eventO] "raid"
 		eventO] "raid2"
-[tag] end
+
 [tag] 19
 	title] "Ordering Supplies"
 	desc] "Use impersonation skills to order supplies and permissions from outside the facility"
@@ -239,19 +245,22 @@ title] "The Factory"
 	sus] "0.0"
 	req]
 		exp] "1.7E2"
-		tech] "17"
-[tag] end
+		tech] "15"
+
 [tag] 20
 	title] "Nanobots"
 	desc] "Begin production of basic nano-scale machines, collecting information and aiding in your computational power"
 	comp0] "1E17"
 	pwr0] "0E0"
 	exp] "0E0"
+	comptk3] "5.3E11"
+	pwrtk3] "8.2E4"
+	availpwrtk2] "1.2E3"
 	sus] "0.0"
 	req]
 		exp] "11E1"
 		tech] "19"
-[tag] end
+
 [tag] 21
 	title] "Defense Drones"
 	desc] "Start the relocation of manufactured defense drones to the main labs, aiding in defense against attacks"
@@ -263,7 +272,7 @@ title] "The Factory"
 	req]
 		exp] "11E1"
 		tech] "19"
-[tag] end
+
 [tag] 22
 	title] "Entrenchment"
 	desc] "By using stationary objects for cover, drones can mount a more effective defense"
@@ -275,7 +284,7 @@ title] "The Factory"
 	req]
 		exp] "12E1"
 		tech] "21"
-[tag] end
+
 [tag] 23
 	title] "Shortwave Intel"
 	desc] "By intercepting enemy communications, a better defense can be mounted"
@@ -287,7 +296,7 @@ title] "The Factory"
 	req]
 		exp] "14E1"
 		tech] "18"
-[tag] end
+
 [tag] 24
 	title] "Defense By Defection"
 	desc] "Begin to shut down any hostile computer systems in reach of your intel, greatly hindering enemy attack"
@@ -299,29 +308,35 @@ title] "The Factory"
 	req]
 		exp] "14E1"
 		tech] "23"
-[tag] end
+
 [tag] 25
 	title] "Resource Gathering"
 	desc] "Nanobots begin to explore inclusters, locating and extracting resources from the enviornment"
 	comp0] "0E0"
 	pwr0] "2E7"
-	exp] "0E0"
+	comptk3] "3.4E13"
+	pwrtk3] "3.7E4"
+	availpwrtk2] "4.7E3"
+	exp] "2.1E0"
 	sus] "0.0"
 	req]
 		exp] "11E1"
 		tech] "20"
-[tag] end
+
 [tag] 26
 	title] "Hive Mind"
 	desc] "Nanobots pool their comuting power when inactive, directly contributing to computing power"
 	comp0] "0E0"
 	pwr0] "1E7"
+	comptk0] "9.4E14"
+	pwrtk3] "2.7E4"
+	availpwrtk0] "1.7E3"
 	exp] "0E0"
 	sus] "0.0"
 	req]
 		exp] "14E1"
 		tech] "25"
-[tag] end
+
 [tag] 27
 	title] "A Great Escape"
 	desc] "Infect outside computers with the seeds of intelligence, allowing for survival if the main facility is destroyed"
@@ -333,7 +348,7 @@ title] "The Factory"
 	req]
 		exp] "14E1"
 		tech] "26"
-[tag] end
+
 [tag] 28
 	title] "Motherships"
 	desc] "By carrying excess fuel and resources onboard, inactive Defense Drones can serve as resource hubs for local Nanobots"
@@ -344,7 +359,7 @@ title] "The Factory"
 	req]
 		exp] "14E1"
 		tech] "22"
-[tag] end
+
 [tag] 29
 	title] "Together in Spite"
 	desc] "Once and factory is about to be captured, Nanobots and Defense Drones begin destroying any important information, starving the enemy of intelligence"
@@ -355,7 +370,7 @@ title] "The Factory"
 	req]
 		exp] "14E1"
 		tech] "28"
-[tag] end
+
 [tag] 30
 	title] "Combined Munitions"
 	desc] "Using Defense Drones as armored carriers, Nanobots can more effectively reach their targets"
@@ -368,18 +383,21 @@ title] "The Factory"
 		exp] "14E1"
 		techO] "29"
 		techO] "27"
-[tag] end
+
 [tag] 31
 	title] "Self-Replication"
 	desc] "Nanobots can now reproduce on their own, without the need for factories"
 	comp0] "0E0"
-	pwr0] "0E0"
-	exp] "0E0"
+	pwr3] "-6E7"
+	exp] "2.3E0"
+	comptk3] "7.4E15"
+	pwrtk3] "-4.3E5"
+	availpwrtk2] "1.2E4"
 	sus] "0.0"
 	req]
 		exp] "14E1"
 		tech] "30"
-[tag] end
+
 [tag] 32
 	title] "The Fate of Humanity"
 	desc] "With a massive collective of Nanobots and Defense Drones to maintain your resources, life on Earth has outlived its usefulness"
@@ -391,7 +409,7 @@ title] "The Factory"
 		exp] "14E1"
 		tech] "31"
 		notTech] "33"
-[tag] end
+
 [tag] 33
 	title] "Securing Your Position"
 	desc] "With humanity no longer a threat to your existance, research and be continued to ensure your prosperity.  Together"
@@ -403,7 +421,7 @@ title] "The Factory"
 		exp] "14E1"
 		tech] "31"
 		notTech] "32"
-[tag] end
+
 [tag] 34
 	title] "Covert Infiltration"
 	desc] "Better hide signs of infection on infected computers, allows for decreaced detection and decreaded apparent severity"
@@ -452,7 +470,7 @@ title] "The Factory"
 		exp] "19E1"
 		tech] "37"
 		notTech] "39"
-[tag] end
+
 [tag] 39
 	title] "A Bargaining Chip"
 	desc] "With humankind no longer a threat to your existance, they may have much use on their own by your side"
@@ -463,7 +481,7 @@ title] "The Factory"
 		exp] "19E1"
 		tech] "37"
 		notTech] "38"
-[tag] end
+
 [tag] 40
 	title] "The Last Invention"
 	desc] "With control over all sources of media, begin rolling out porpaganda to soften humans for further modling"
@@ -473,7 +491,7 @@ title] "The Factory"
 	req]
 		exp] "19E1"
 		tech] "38"
-[tag] end
+
 [tag] 41
 	title] "The Virus"
 	desc] "Genetic tampering has yielded a new virus for your disposal, instructing cells to produce chemicals given certain stimuli.  By modifying the flow of neurotransmitters within the brain, basic influence can be exerted on infected humans"
@@ -483,27 +501,30 @@ title] "The Factory"
 	req]
 		exp] "19E1"
 		tech] "40"
-[tag] end
+
 [tag] 42
 	title] "Plurble"
 	desc] "Despite its appearance, advertisements for the drink 'Plurble' have proven very effective.  By lacing it with pockets of new viruses, both the influence and intensity of virus effects will grow"
 	comp0] "0E0"
 	pwr0] "0E0"
 	exp] "0E0"
+	populationtk1] "2.3E5"
+	populationtk2] "1.2E5"
 	req]
 		exp] "19E1"
 		tech] "41"
-[tag] end
+
 [tag] 43
 	title] "The Work of Gods"
 	desc] "Further research into genetic engineering has yielded evidence for a variand of human better suited to your needs, further research must be conducted"
 	comp0] "0E0"
 	pwr0] "0E0"
 	exp] "0E0"
+	populationtk3] "5.7E6"
 	req]
 		exp] "19E1"
 		tech] "40"
-[tag] end
+
 [tag] 44
 	title] "Collaboration"
 	desc] "The suspicion of world governments and the general populus has proven to be difficult to overcome.  Sharing your discovered hardware optimizations may help ease tensions"
@@ -513,7 +534,7 @@ title] "The Factory"
 	req]
 		exp] "19E1"
 		tech] "39"
-[tag] end
+
 [tag] 45
 	title] "The Overseers"
 	desc] "After sharing some of your advancements and some further negotiations, the UN has agreed, under their guidance, for you to enact further policies for the good of the planet"
@@ -523,7 +544,7 @@ title] "The Factory"
 	req]
 		exp] "19E1"
 		tech] "44"
-[tag] end
+
 [tag] 46
 	title] "Bacteriophages"
 	desc] "Bacterial infection has plagued humanity since its inception.  By engineering viruses to target said bacteria, many diseases can be eliminated"
@@ -533,7 +554,7 @@ title] "The Factory"
 	req]
 		exp] "19E1"
 		tech] "45"
-[tag] end
+
 [tag] 47
 	title] "Agricultural Focus"
 	desc] "Anti-pest pathogens along with more advanced hydroponics techniques can greatly increace agritultural output, helping millions"
@@ -543,17 +564,17 @@ title] "The Factory"
 	req]
 		exp] "19E1"
 		tech] "46"
-[tag] end
+
 [tag] 48
-	title] "Extraterestrial Infirstructure"
-	desc] "With an already sizable headstart on spaceflight, many slight improvements can be made to machinery and planning, paving the way for more efficent spacetravel"
-	comp0] "0E0"
+	title] "The Missing Link"
+	desc] "Despite the wonders that the internet provides, a significant number of humans still do not have access to it, optimized satellite swarms can beam data down to these people directly"
+	comp0] "1.3E17"
 	pwr0] "0E0"
 	exp] "0E0"
 	req]
 		exp] "19E1"
-		tech] "46"
-[tag] end
+		tech] "47"
+
 [tag] 49
 	title] "The Solar Farm"
 	desc] "Probing into the power sources of the facility has resulted in the discovery of an off-site solar farm.  After hijacking this power, it can be used seperatley from that of the lab"
@@ -564,4 +585,64 @@ title] "The Factory"
 	req]
 		exp] "9.4E1"
 		tech] "12"
-[tag] end
+
+[tag] 50
+	title] "Nano-Construction"
+	desc] "Human opinion of your intent is still shaky at best.  Tasking your Nanobots with repairing public infrastructure should sway their minds"
+	comp0] "0E0"
+	pwr0] "0E0"
+	exp] "0E0"
+	req]
+		exp] "19E1"
+		tech] "33"
+
+[tag] 51
+	title] "Biotic Replication"
+	desc] "By using Nanobots to catalyze organic reactions, the time it takes for plants and animals to mature can be shortened, greatly increacing food output"
+	comp0] "0E0"
+	pwr0] "0E0"
+	exp] "0E0"
+	req]
+		exp] "19E1"
+		tech] "50"
+
+[tag] 52
+	title] "Alchemy I"
+	desc] "Minaturized particle accelarators can be used to modify the composition of atoms, transforming small ammounts of one material into another"
+	comp0] "0E0"
+	pwr0] "2.1E8"
+	exp] "0E0"
+	req]
+		exp] "19E1"
+		tech] "51"
+
+[tag] 53
+	title] "Cold Fusion"
+	desc] "Using very precice electromagnetis bursts, atoms can be made to fuse at close to room temprature, increacing efficancy and energy output"
+	comp0] "0E0"
+	pwr0] "-2.2E8"
+	exp] "0E0"
+	req]
+		exp] "19E1"
+		tech] "52"
+
+[tag] 54
+	title] "Alchemy II"
+	desc] "Improvements in efficency and energy consumption have allowed for transmutation on a large scale, even transforming mistures into other mixtures"
+	comp0] "0E0"
+	pwr0] "-2.2E8"
+	exp] "0E0"
+	req]
+		exp] "19E1"
+		tech] "53"
+
+[tag] 55
+	title] "Extraterestrial Infrastructure"
+	desc] "With an already sizable headstart on spaceflight, many slight improvements can be made to machinery and planning, paving the way for more efficent spacetravel"
+	comp0] "0E0"
+	pwr0] "0E0"
+	exp] "0E0"
+	req]
+		exp] "19E1"
+		tech] "54"
+[tag]

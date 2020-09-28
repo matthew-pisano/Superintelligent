@@ -97,9 +97,12 @@ public class PieChart {
         }catch(Exception e){e.printStackTrace();}
     }
     private void addData(Object ammount, int color, String title){
+        Log.i("AddData", ammount+", "+title);
         if(data.size() == 1)
-            if(data.get(0)[2].equals("No Data"))
+            if(data.get(0)[2].equals("No Data")){
+                Log.i("RemoveData", titleTxt+", No Data");
                 data.remove(0);
+            }
         data.add(new String[]{""+ammount, ""+color, title});
     }
     private void removeData(String title){
@@ -134,8 +137,10 @@ public class PieChart {
         double sumAmmounts = 0;
         labelLayout.removeAllViews();
         colorLayout.removeAllViews();
-        for(String[] arr: data)
+        for (int i = 0; i < data.size(); i++) {
+            String[] arr = data.get(i);
             sumAmmounts += Double.parseDouble(arr[0]);
+        }
 
         for (int i = 0; i < data.size(); i++) {
             String[] arr = data.get(i);
@@ -152,13 +157,13 @@ public class PieChart {
                 label.setText(arr[2] + ":\n" + new Exp(Double.parseDouble(arr[0]), 0).toPrefixString() + unit);
             label.setTextSize(TypedValue.COMPLEX_UNIT_PX, radius / 7);
             label.setTextColor(Color.BLACK);
-            labelLayout.addView(label);
+            if(Double.parseDouble(arr[0]) != 0) labelLayout.addView(label);
             ImageView colorView = new ImageView(context);
             colorView.setImageBitmap(bitColor);
-            colorLayout.addView(colorView);
+            if(Double.parseDouble(arr[0]) != 0) colorLayout.addView(colorView);
         }
         TextView total = new TextView(context);
-        if(illion)total.setText("Total:\n"+new Exp(sumAmmounts, 0).toIllionString()+" "+unit);
+        if(illion) total.setText("Total:\n"+new Exp(sumAmmounts, 0).toIllionString()+" "+unit);
         else total.setText("Total:\n"+new Exp(sumAmmounts, 0).toPrefixString()+unit);
         total.setTextSize(TypedValue.COMPLEX_UNIT_PX, radius/7);
         total.setTextColor(Color.BLACK);

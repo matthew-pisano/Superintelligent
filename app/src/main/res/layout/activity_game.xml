@@ -147,6 +147,56 @@
             app:layout_constraintWidth_percent=".999" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/suspicionText"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:text="0"
+        android:textColor="#000000"
+        app:layout_constraintBottom_toBottomOf="@id/susRound"
+        app:layout_constraintEnd_toEndOf="@id/susRound"
+        app:layout_constraintStart_toStartOf="@id/susRound"
+        app:layout_constraintTop_toTopOf="@id/susRound" />
+
+
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/takeoverLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        android:background="@drawable/expround"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent=".06"
+        app:layout_constraintHorizontal_bias=".75"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias=".99"
+        app:layout_constraintWidth_percent=".17">
+
+        <ImageView
+            android:id="@+id/takeoverProgress"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent=".999"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent=".999" />
+        <TextView
+            android:id="@+id/takeoverText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="0% Takeover"
+            android:textColor="#000000" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/pwrLayout"
@@ -246,17 +296,7 @@
         app:layout_constraintVertical_bias=".2"
         app:layout_constraintWidth_percent=".14" />
 
-    <TextView
-        android:id="@+id/suspicionText"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:gravity="center"
-        android:text="0"
-        android:textColor="#000000"
-        app:layout_constraintBottom_toBottomOf="@id/susRound"
-        app:layout_constraintEnd_toEndOf="@id/susRound"
-        app:layout_constraintStart_toStartOf="@id/susRound"
-        app:layout_constraintTop_toTopOf="@id/susRound" />
+
 
 
     <ImageButton
@@ -277,7 +317,7 @@
         android:id="@+id/mapAt"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/resourcebar"
+        android:background="@drawable/labmap"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent=".11"
@@ -291,24 +331,40 @@
         android:id="@+id/mapSelectLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintVertical_bias=".99"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent=".6"
         app:layout_constraintHorizontal_bias=".01"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintWidth_percent=".37">
 
         <ImageButton
-            android:id="@+id/homeMap"
+        android:id="@+id/homeMap"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/labmap"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent=".2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias=".001"
+        app:layout_constraintWidth_percent=".999" />
+
+        <ImageButton
+            android:id="@+id/worldMap"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:background="@drawable/expbar"
+            android:background="@drawable/toearthmap"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHeight_percent=".2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias=".001"
+            app:layout_constraintVertical_bias=".29"
             app:layout_constraintWidth_percent=".999" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -415,19 +471,7 @@
         app:layout_constraintVertical_bias=".016"
         app:layout_constraintWidth_percent=".063" />
 
-    <TextView
-        android:id="@+id/timeStep"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:textColor="#000000"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent=".09"
-        app:layout_constraintHorizontal_bias=".99"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias=".001"
-        app:layout_constraintWidth_percent=".2" />
+
 
     <ImageButton
         android:id="@+id/timeUp"
@@ -461,7 +505,7 @@
         android:id="@+id/controlLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="2000dp"
+        android:layout_marginTop="20dp"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent=".9999"
@@ -581,7 +625,7 @@
                     android:id="@+id/compSlider"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/energyslide" />
+                    android:background="@drawable/compslide" />
             </FrameLayout>
             <ImageButton
                 android:id="@+id/researchRound"
@@ -622,6 +666,7 @@
                 app:layout_constraintVertical_bias=".163"
                 app:layout_constraintWidth_percent=".075" />
 
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/techProgLayout"
                 android:layout_width="0dp"
@@ -647,20 +692,33 @@
                     app:layout_constraintWidth_percent=".999" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
+            <ImageView
+                android:id="@+id/statusTextRound"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/widecover"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHeight_percent=".25"
+                app:layout_constraintHorizontal_bias=".55"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias=".9"
+                app:layout_constraintWidth_percent=".25" />
+
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:gravity="center"
                 android:textColor="#000000"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHeight_percent=".65"
-                app:layout_constraintWidth_percent=".5"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintHorizontal_bias=".9"
-                app:layout_constraintVertical_bias=".4" />
+                android:scrollbars="vertical"
+                app:layout_constraintBottom_toBottomOf="@id/statusTextRound"
+                app:layout_constraintEnd_toEndOf="@id/statusTextRound"
+                app:layout_constraintStart_toStartOf="@id/statusTextRound"
+                app:layout_constraintTop_toTopOf="@id/statusTextRound" />
+
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -806,7 +864,7 @@
             app:layout_constraintHeight_percent=".1"
             app:layout_constraintVertical_bias=".99"
             app:layout_constraintHorizontal_bias=".99"
-            android:background="@drawable/techround"
+            android:background="@drawable/tomenu"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
