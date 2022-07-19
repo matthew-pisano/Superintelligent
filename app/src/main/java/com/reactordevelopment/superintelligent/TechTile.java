@@ -87,7 +87,7 @@ public class TechTile extends Game{
         Log.i("Tiles", "iniy");
         int startI = techStr.indexOf("[tag] "+techId);
         String cutTechStr = techStr.substring(startI, techStr.indexOf("[tag]", startI+7));
-        values = MainActivity.parseResourceChange(cutTechStr);
+        values = MainActivity.parseResourceChange(cutTechStr, "TechPass");
 
         //Log.i("Techs", cutTechStr);
         /*int expStart = cutTechStr.indexOf("exp] \"")+6;

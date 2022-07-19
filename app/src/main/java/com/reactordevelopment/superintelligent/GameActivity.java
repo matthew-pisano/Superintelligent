@@ -450,6 +450,7 @@ public class GameActivity extends AppCompatActivity {
 
         printMemory("5");
         new Event(context, "inital");
+        new Event(context, "rand4");
     }
     private void postInit(){
         Canvas canvas = new Canvas(worldBit);
@@ -484,7 +485,7 @@ public class GameActivity extends AppCompatActivity {
         final long maxHeapSizeInMB=runtime.maxMemory() / 1048576L;
         Log.i("MEMORY_PRINT ("+ident+")", "Used: "+usedMemInMB+", MaxHeap: "+maxHeapSizeInMB+", Available: "+(maxHeapSizeInMB-usedMemInMB)+", SystemTime: "+System.currentTimeMillis());
     }
-    private static void switchToMap(int id){
+    private void switchToMap(int id){
         game.mapAt = id;
         if(id == 0){
             takeoverLayout.setVisibility(View.INVISIBLE);
@@ -494,6 +495,7 @@ public class GameActivity extends AppCompatActivity {
             blankMap.setVisibility(View.VISIBLE);
             nightMap.setVisibility(View.VISIBLE);
             mapAt.setBackgroundResource(R.drawable.labmap);
+            findViewById(R.id.mapround).setBackgroundResource(R.drawable.mapround);
         }
         if(id == 1){
             takeoverLayout.setVisibility(View.VISIBLE);
@@ -503,6 +505,7 @@ public class GameActivity extends AppCompatActivity {
             nightMap.setVisibility(View.INVISIBLE);
             controlMap.setImageBitmap(worldControlBit);
             mapAt.setBackgroundResource(R.drawable.toearthmap);
+            findViewById(R.id.mapround).setBackgroundResource(R.drawable.earthround);
         }
     }
     public static void setExpText(String text){expText.setText(text);}

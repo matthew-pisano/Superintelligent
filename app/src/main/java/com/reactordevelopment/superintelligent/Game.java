@@ -108,7 +108,7 @@ public class Game extends GameActivity{
         researchBoost = 0;
         experienceCngBoost = 1;
         experienceCng = .12;
-        suspicion = 0;
+        suspicion = .99;
         tickingSuspicion = .0005;
         tickingDefense = 0;
         timeLevel = 1;
@@ -300,7 +300,7 @@ public class Game extends GameActivity{
                 if(gameDate.getTime() - START_DATE.getTime() >= timestep*100 && gameDate.getTime() - START_DATE.getTime() < timestep*101) new Event(context, "newsGlass");
                 if(gameDate.getTime() - START_DATE.getTime() >= timestep*150 && gameDate.getTime() - START_DATE.getTime() < timestep*151) new Event(context, "newsSetback");
                 statusText.setText("Defense from attack: "+(defense*100)+"%\n"+
-                        "Human desperation: "+((suspicion > 1) ? ((suspicion-1)*100) : 0)+"%");
+                        "Human desperation: "+((suspicion > 1) ? (int)((suspicion-1)*1000)/10.0 : 0)+"%");
                 String dateStr = new SimpleDateFormat("d MMM yyyy HH:00").format(gameDate);
                 int hour = Integer.parseInt(dateStr.substring(dateStr.length()-5, dateStr.length()-3));
                 setDateText(dateStr);
@@ -315,29 +315,29 @@ public class Game extends GameActivity{
                     susMilestone[0] = true;
                 }
                 if(!susMilestone[1] && suspicion >= .49) {
-                    new Event(context, "suspicion2");
                     new Event(context, "suspicion3");
+                    new Event(context, "suspicion2");
                     susMilestone[1] = true;
                 }
                 if(!susMilestone[2] && suspicion >= .89) {
-                    new Event(context, "suspicion4");
-                    new Event(context, "suspicion5");
                     new Event(context, "suspicion6");
+                    new Event(context, "suspicion5");
+                    new Event(context, "suspicion4");
                     susMilestone[2] = true;
                 }
                 if(!susMilestone[3] && suspicion >= 1) {
-                    new Event(context, "suspicion7");
                     new Event(context, "newsCoverup");
+                    new Event(context, "suspicion7");
                     tickingDefense = .0005;
                     susDate = gameDate;
+                    addPowerSource(0, availPowerSources[0].multiplied(new Exp(-9.9, -1)));
                     lastRaidDate = new Date(gameDate.getTime()-86500000*5);
                     raidWarningDate = new Date(gameDate.getTime()-86500000*7);
                     tickingSuspicion += .01;
                     susMilestone[3] = true;
                 }
                 double takeoverPercent = (Exp.sumArray(lastGrowthComp).multiplied(Game.EARTH_COMPUTING.inverted())).toDouble();
-                if(humanIsThreat && (popSources[0].toDouble() < 15000000
-                        || takeoverPercent > 1))
+                if(humanIsThreat && (popSources[0].toDouble() < 15000000 || takeoverPercent > 1))
                     humanIsThreat = false;
                 if(suspicion >= 3 && humanIsThreat){
                     if(unlockedTechs.contains(17)) new Event(context, "newsDesperateTimes");
@@ -401,11 +401,9 @@ public class Game extends GameActivity{
 
     }public void addPowerSource(int type, Exp ammount){
         if(type == 2) Log.i("NonobotPwr", ammount.toString());
-        //Log.i("addPwrSrc", type+", "+ammount+", "+availPower);
-        availPowerSources[type].add(ammount);
-        //Log.i("addPwrSrc2", type+", "+ammount+", "+availPower);
+        availPowerSources[type].add(ammount);;
         availPower = Exp.sumArray(availPowerSources);
-        //Log.i("addPwrSrc3", type+", "+ammount+", "+availPower);
+        if(power.greaterThan(availPower)) power = availPower.copy();
         runOnUiThread(new Runnable() {
             @Override public void run() {
                 float anim = (float) (-1 + power.getNum() / availPower.getNum()) * screenHeight * .28f;
@@ -463,10 +461,11 @@ public class Game extends GameActivity{
         popChart.removeFromLayout(statusTabLayout);
         compChart.removeFromLayout(statusTabLayout);
         pwrChart.removeFromLayout(statusTabLayout);
-        popChart.addToLayout(gameOverLayout, screenHeight*.4f, screenWidth*.1f);
-        compChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.1f);
-        pwrChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.35f);
-        availPwrChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.65f);
+        availPwrChart.removeFromLayout(statusTabLayout);
+        popChart.addToLayout(gameOverLayout, screenHeight*.03f, screenWidth*.63f);
+        compChart.addToLayout(gameOverLayout, screenHeight*.33f, screenWidth*.7f);
+        pwrChart.addToLayout(gameOverLayout, screenHeight*.54f, screenWidth*.7f);
+        availPwrChart.addToLayout(gameOverLayout, screenHeight*.75f, screenWidth*.7f);
     }
     public void gameOverMan(){
         endGame(true);
