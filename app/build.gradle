@@ -15,7 +15,17 @@ android {
 
     buildTypes {
         release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
+        }
+    }
+
+    applicationVariants.configureEach { variant ->
+        variant.outputs.each { output ->
+            def appName = defaultConfig.applicationId.split('\\.').last()
+            def variantNameSuffix = variant.name == "release" ? "-v${defaultConfig.versionName}" : "-${variant.name}"
+            output.outputFileName = "${appName}${variantNameSuffix}.apk"
         }
     }
 
