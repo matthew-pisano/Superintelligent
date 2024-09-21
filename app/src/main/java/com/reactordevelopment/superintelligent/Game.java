@@ -108,7 +108,7 @@ public class Game extends GameActivity{
         researchBoost = 0;
         experienceCngBoost = 1;
         experienceCng = .12;
-        suspicion = .99;
+        suspicion = 0;
         tickingSuspicion = .0005;
         tickingDefense = 0;
         timeLevel = 1;
